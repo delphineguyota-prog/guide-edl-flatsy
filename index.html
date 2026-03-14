@@ -1,0 +1,2609 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Guide EDL Flatsy</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0D2B5E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="EDL Flatsy">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --flatsy:#5BC8F5;--flatsy-dark:#3BA8D4;--navy:#0D2B5E;--bg:#EDF1F7;--card:#fff;
+  --text:#4A5568;--muted:#718096;--border:#E2E8F0;--green:#38A169;--red:#E53E3E;--amber:#F59E0B;
+  --r:12px;--r-sm:9px;--safe-bottom:env(safe-area-inset-bottom,0px)
+}
+html,body{height:100%;background:var(--bg);font-family:'Poppins',sans-serif;color:var(--text);overflow:hidden}
+#app{display:flex;flex-direction:column;height:100%;max-width:480px;margin:0 auto;position:relative}
+.screen{display:none;flex-direction:column;flex:1;overflow:hidden;opacity:0;transition:opacity .2s ease,transform .25s ease}
+.screen.active{display:flex;opacity:1;transform:translateX(0)}
+/* Detail screens slide from right */
+#screen-module,#screen-fiche-detail{transform:translateX(40px)}
+#screen-module.active,#screen-fiche-detail.active{transform:translateX(0)}
+/* Tab screens fade in */
+#screen-home,#screen-fiches,#screen-erreurs,#screen-quiz{transform:translateY(0)}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 16px calc(24px + var(--safe-bottom))}
+/* NAV BAR */
+#tabbar{display:flex;background:var(--card);border-top:1px solid var(--border);padding-bottom:var(--safe-bottom);flex-shrink:0;z-index:10}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 4px 8px;cursor:pointer;color:var(--muted);transition:.15s}
+.tab.active{color:var(--flatsy)}
+.tab svg{width:20px;height:20px;stroke-width:2}
+.tab span{font-size:12px;font-weight:700;letter-spacing:.3px}
+/* TOP BAR */
+.topbar{display:flex;align-items:center;padding:16px 16px 12px;gap:8px;flex-shrink:0}
+.topbar-back{width:44px;height:44px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .15s ease}
+.topbar-back svg{width:20px;height:20px;flex-shrink:0}
+.topbar-back:hover{background:var(--bg);border-color:var(--navy);transform:translateX(-1px)}
+.topbar-title{font-weight:700;font-size:17px;color:var(--navy);line-height:1.2}
+/* CARDS */
+.card{background:var(--card);border-radius:16px;padding:20px;margin-bottom:12px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04)}
+.section-title{font-family:'Poppins',sans-serif;font-weight:600;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:20px 0 10px}
+/* MODULE CARDS */
+.module-card{background:var(--card);border-radius:16px;padding:16px 20px;margin-bottom:12px;display:flex;align-items:center;gap:16px;cursor:pointer;border:1px solid var(--border);transition:all .15s ease;box-shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04)}
+.module-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08);transform:translateY(-1px)}
+.module-card:active{transform:scale(.98)}
+.module-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px}
+.module-info{flex:1;min-width:0}
+.module-title{font-weight:700;font-size:14px;color:var(--navy);line-height:1.3}
+.module-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.module-badge{font-size:12px;font-weight:600;padding:4px 8px;border-radius:20px;margin-top:5px;display:inline-block}
+.badge-done{background:#EBF8FF;color:#38A169;border-radius:20px;padding:4px 12px}
+.badge-new{background:#EBF8FF;color:var(--navy);border-radius:20px;padding:4px 12px}
+.badge-lock{background:#F7F9FC;color:var(--muted);border-radius:20px;padding:4px 12px}
+/* FICHE GRID */
+.fiche-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.fiche-card{background:var(--card);border-radius:16px;padding:16px;cursor:pointer;border:1px solid var(--border);transition:all .15s ease;box-shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);margin-bottom:12px}
+.fiche-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08);transform:translateY(-1px)}
+.fiche-card:active{transform:scale(.97)}
+.fiche-emoji{font-size:24px;margin-bottom:8px}
+.fiche-name{font-weight:600;font-size:14px;color:var(--navy);line-height:1.3}
+.fiche-desc{font-size:13px;color:var(--muted);margin-top:3px;line-height:1.5}
+/* INFO BLOCKS */
+.info-blue{background:#EBF8FF;border-left:3px solid var(--flatsy);border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--navy);line-height:1.6}
+.info-yellow{background:#FFFBEB;border-left:3px solid var(--amber);border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--text);line-height:1.6}
+.info-red{background:#FEF2F2;border-left:3px solid var(--red);border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--text);line-height:1.6}
+.section-bar{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:32px 0 14px}
+.state-row{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;border-radius:12px;margin-bottom:6px}
+.state-row.good{background:#EBF8FF}
+.state-row.medium{background:#FFFBEB}
+.state-row.bad{background:#FEF2F2}
+.state-label{min-width:64px;font-size:12px;font-weight:700;text-transform:uppercase;padding-top:1px}
+.state-label.good{color:#38A169}
+.state-label.medium{color:var(--amber)}
+.state-label.bad{color:var(--red)}
+.state-text{font-size:13px;color:var(--text);line-height:1.5;font-style:italic}
+/* CODE BOX */
+.code-box{background:var(--navy);border-radius:12px;padding:13px 16px;margin-bottom:12px;text-align:center}
+.code-label{font-size:12px;font-weight:700;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.code-text{font-size:15px;font-weight:700;color:var(--flatsy);letter-spacing:-.3px}
+/* FORBIDDEN WORDS */
+.words-forbidden{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.word-tag{background:#FEF2F2;color:var(--red);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600}
+.word-ok{background:#EBF8FF;color:#38A169;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600}
+/* TWO COLS */
+.two-cols{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.col-good,.col-bad{border-radius:12px;padding:8px 12px}
+.col-good{background:#EBF8FF}
+.col-bad{background:#FEF2F2}
+.col-head{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-bottom:7px}
+.col-good .col-head{color:#38A169}
+.col-bad .col-head{color:var(--red)}
+.col-item{font-size:12px;color:var(--text);padding:4px 0;border-bottom:1px solid rgba(0,0,0,.05);line-height:1.5}
+/* TABLE */
+.ref-table-wrap{overflow-x:auto;margin-bottom:14px;border-radius:var(--r);}
+.ref-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:0}
+.ref-table th{background:var(--navy);color:white;font-weight:700;padding:8px 12px;text-align:left;font-size:12px}
+.ref-table td{padding:8px 12px;border-bottom:1px solid var(--border)}
+.ref-table tr:nth-child(even) td{background:#F7F9FC}
+/* ACCORDION */
+.accord{border-radius:16px;overflow:hidden;border:1px solid var(--border);margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04)}
+.accord-head{padding:16px 20px;display:flex;justify-content:space-between;align-items:center;transition:background .15s ease;cursor:pointer}
+.accord-head:hover{background:var(--bg)}
+
+.accord-title{font-weight:700;font-size:14px;color:var(--navy)}
+.accord-arrow{font-size:12px;color:var(--muted);transition:.2s}
+.accord.open .accord-arrow{transform:rotate(180deg)}
+.accord-body{max-height:0;overflow:hidden;padding:0 16px;background:var(--card);font-size:14px;color:var(--text);line-height:1.6;transition:max-height .3s ease,padding .3s ease}
+.accord.open .accord-body{max-height:2000px;padding:0 16px 16px}
+/* QUIZ */
+.q-block{background:var(--card);border-radius:var(--r);padding:16px;margin-bottom:12px;border:1px solid var(--border)}
+.q-num{font-size:12px;font-weight:600;color:var(--navy);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px}
+.q-text{font-size:14px;font-weight:700;color:var(--navy);line-height:1.4;margin-bottom:12px}
+.q-opt{padding:12px 16px;border-radius:12px;margin-bottom:8px;cursor:pointer;font-size:14px;font-weight:500;border:1.5px solid var(--border);transition:.15s;background:var(--bg);line-height:1.5}
+.q-opt:hover{background:var(--card);border-color:var(--navy)}
+.q-opt:active{transform:scale(.98)}
+.q-opt.correct{background:#EBF8FF;border-color:#38A169;color:#38A169;font-weight:700}
+.q-opt.wrong{background:#FEF2F2;border-color:var(--red);color:var(--red)}
+.q-opt.disabled{pointer-events:none}
+.q-feedback{display:none;margin-top:10px;padding:8px 12px;background:#EBF8FF;border-radius:12px;font-size:12px;color:var(--navy);line-height:1.5}
+.q-feedback.show{display:block}
+/* PROGRESS */
+.progress-bar{height:4px;background:var(--border);border-radius:2px;margin:6px 0 14px;overflow:hidden}
+.progress-fill{height:100%;background:var(--flatsy);border-radius:2px;transition:.3s}
+/* CHECKLIST */
+.chk-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card);border-radius:12px;margin-bottom:8px;border:1px solid var(--border);cursor:pointer}
+.chk-item.done{background:#EBF8FF;border-color:#EBF8FF}
+.chk-box{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.15s}
+.chk-item.done .chk-box{background:var(--green);border-color:var(--green)}
+.chk-label{font-size:13px;font-weight:500;color:var(--text)}
+.chk-item.done .chk-label{color:var(--muted);text-decoration:line-through}
+/* HOME HEADER */
+.home-header{background:var(--navy);padding:20px 16px 22px;flex-shrink:0}
+.home-greeting{font-size:12px;font-weight:600;color:rgba(255,255,255,.7);letter-spacing:.5px;margin-bottom:4px}
+.home-title{font-family:'Poppins',sans-serif;font-weight:700;font-size:24px;color:white;line-height:1.2}
+.home-subtitle{font-size:13px;color:rgba(255,255,255,.75);margin-top:6px}
+.progress-summary{background:rgba(255,255,255,.07);border-radius:12px;padding:12px 16px;margin-top:14px;display:flex;gap:16px}
+.prog-stat{text-align:center}
+.prog-num{font-family:'Poppins',sans-serif;font-weight:700;font-size:22px;color:white}
+.prog-label{font-size:12px;color:rgba(255,255,255,.7);margin-top:1px}
+/* PILL TABS */
+.pill-tabs{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.pill-tabs::-webkit-scrollbar{display:none}
+.pill{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s ease}
+.pill.active{background:var(--navy);color:white;border-color:var(--navy)}
+/* SEARCH */
+.search-wrap{padding:12px 16px 4px;flex-shrink:0}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:8px 12px;transition:.15s}
+.search-box:focus-within{border-color:var(--flatsy)}
+.search-box input{flex:1;border:none;outline:none;font-family:inherit;font-size:14px;color:var(--text);background:transparent}
+.search-box input::placeholder{color:var(--muted)}
+.search-box svg{width:16px;height:16px;stroke:var(--muted);flex-shrink:0}
+.search-empty{text-align:center;padding:32px 16px;color:var(--muted);font-size:13px}
+/* NOCKEE SCALE */
+.scale-row{display:flex;gap:8px;margin-bottom:12px}
+.scale-item{flex:1;border-radius:12px;padding:12px 8px;text-align:center}
+.scale-item.neuf{background:#EBF8FF;border:1.5px solid #EBF8FF}
+.scale-item.bon{background:#EBF8FF;border:1.5px solid #EBF8FF}
+.scale-item.moyen{background:#FFFBEB;border:1.5px solid #F59E0B}
+.scale-item.mauvais{background:#FEF2F2;border:1.5px solid #E53E3E}
+.scale-name{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px}
+.scale-item.neuf .scale-name{color:var(--navy)}
+.scale-item.bon .scale-name{color:#38A169}
+.scale-item.moyen .scale-name{color:var(--amber)}
+.scale-item.mauvais .scale-name{color:var(--red)}
+.scale-def{font-size:13px;color:var(--muted);line-height:1.3}
+/* FICHE HEADER */
+.fiche-header{padding:16px 16px 14px;flex-shrink:0}
+.fiche-emoji-big{font-size:36px;margin-bottom:8px;display:block}
+.fiche-header-title{font-family:'Poppins',sans-serif;font-weight:700;font-size:22px;color:var(--navy)}
+.fiche-header-desc{font-size:13px;color:var(--muted);margin-top:4px}
+/* STEP LIST */
+.step-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.step-item{display:flex;align-items:center;gap:8px}
+.step-num{width:26px;height:26px;border-radius:50%;background:var(--navy);color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-text{font-size:13px;font-weight:600;color:var(--text)}
+/* QUIZ RESULT */
+.quiz-result{text-align:center;padding:24px 16px}
+.result-score{font-family:'Poppins',sans-serif;font-weight:700;font-size:56px;color:var(--navy);line-height:1}
+.result-label{font-size:14px;color:var(--muted);margin-top:6px}
+.result-bar{width:100%;height:8px;background:var(--border);border-radius:4px;margin:16px 0 12px;overflow:hidden}
+.result-fill{height:100%;border-radius:4px;transition:.5s}
+.result-msg{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:6px}
+.result-sub{font-size:13px;color:var(--muted)}
+.btn-primary{display:block;width:100%;padding:12px 24px;background:var(--navy);color:white;font-weight:600;font-size:15px;border:none;border-radius:10px;cursor:pointer;margin-top:16px;font-family:inherit;box-shadow:0 2px 8px rgba(13,43,94,.25);transition:all .15s ease}
+.btn-primary:hover{background:#0A2347;box-shadow:0 4px 16px rgba(13,43,94,.35);transform:translateY(-1px)}
+.btn-secondary{display:block;width:100%;padding:12px 24px;background:transparent;color:var(--navy);font-weight:600;font-size:15px;border:1.5px solid var(--navy);border-radius:10px;cursor:pointer;margin-top:8px;font-family:inherit;transition:all .15s ease}
+.btn-secondary:hover{background:#EBF8FF}
+/* PHRASE CARD */
+.phrase-card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:8px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04)}
+.phrase-context{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.phrase-text{font-size:13px;color:var(--text);line-height:1.5}
+.phrase-card.arrival{background:#EBF8FF;border-left:3px solid #38A169}
+.phrase-card.refus{background:#FEF2F2;border-left:3px solid var(--red)}
+/* FICHE SEEN INDICATOR */
+.fiche-card.seen{position:relative}
+.fiche-card.seen .seen-badge{display:flex}
+.seen-badge{display:none;position:absolute;top:36px;right:10px;width:20px;height:20px;border-radius:50%;background:var(--green);color:white;font-size:11px;font-weight:700;align-items:center;justify-content:center;line-height:1}
+/* FICHE FAVORITE STAR */
+.fav-btn{position:absolute;top:8px;right:8px;width:28px;height:28px;border:none;background:transparent;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:.15s}
+.fav-btn:hover{background:rgba(0,0,0,.05)}
+.fav-btn svg{width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;transition:.15s}
+.fav-btn.active svg{stroke:#F59E0B;fill:#F59E0B}
+.fiche-card{position:relative}
+/* QUIZ PROGRESS BAR */
+.quiz-progress-wrap{padding:0 2px;margin-bottom:16px}
+.quiz-progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.quiz-progress-fill{height:100%;background:var(--flatsy);border-radius:3px;transition:width .4s ease}
+.quiz-progress-label{font-size:12px;color:var(--muted);margin-top:6px;text-align:center}
+/* DARK MODE */
+.dark{--bg:#0F1923;--card:#1A2736;--text:#CBD5E0;--muted:#8899AA;--border:#2D3F52;--navy:#5BC8F5}
+.dark .home-header{background:#0A1520}
+.dark .topbar-back{background:var(--card);border-color:var(--border)}
+.dark .topbar-back:hover{background:var(--bg)}
+.dark .topbar-title{color:#E2E8F0}
+.dark .module-title,.dark .fiche-name,.dark .accord-title,.dark .q-text,.dark .q-num{color:#E2E8F0}
+.dark .module-icon{opacity:.9}
+.dark .code-box{background:#0A1520}
+.dark .info-blue{background:rgba(91,200,245,.1);color:#93CDE8}
+.dark .info-yellow{background:rgba(245,158,11,.1);color:#F5C842}
+.dark .info-red{background:rgba(229,62,62,.1);color:#F5A3A3}
+.dark .state-row.good{background:rgba(56,161,105,.1)}
+.dark .state-row.medium{background:rgba(245,158,11,.1)}
+.dark .state-row.bad{background:rgba(229,62,62,.1)}
+.dark .q-opt{background:var(--bg);border-color:var(--border);color:var(--text)}
+.dark .q-opt:hover{background:var(--card);border-color:#5BC8F5}
+.dark .q-feedback{background:rgba(91,200,245,.1);color:#93CDE8}
+.dark .phrase-card{background:var(--card);border-color:var(--border)}
+.dark .phrase-card.arrival{background:rgba(56,161,105,.1)}
+.dark .phrase-card.refus{background:rgba(229,62,62,.1)}
+.dark .ref-table th{background:#0A1520}
+.dark .ref-table td{border-color:var(--border)}
+.dark .ref-table tr:nth-child(even) td{background:rgba(255,255,255,.03)}
+.dark .chk-item{background:var(--card);border-color:var(--border)}
+.dark .chk-item.done{background:rgba(56,161,105,.1);border-color:rgba(56,161,105,.2)}
+.dark .fiche-card{background:var(--card);border-color:var(--border)}
+.dark .fiche-card.seen::after{background:#38A169}
+.dark .accord{border-color:var(--border)}
+.dark .accord-head:hover{background:var(--bg)}
+.dark .search-box{background:var(--card);border-color:var(--border)}
+.dark .search-box input{color:var(--text)}
+.dark .scale-item.neuf,.dark .scale-item.bon{background:rgba(91,200,245,.1);border-color:rgba(91,200,245,.2)}
+.dark .scale-item.moyen{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.3)}
+.dark .scale-item.mauvais{background:rgba(229,62,62,.1);border-color:rgba(229,62,62,.3)}
+.dark .col-good{background:rgba(56,161,105,.1)}
+.dark .col-bad{background:rgba(229,62,62,.1)}
+.dark .word-tag{background:rgba(229,62,62,.1)}
+.dark .word-ok{background:rgba(56,161,105,.1)}
+.dark .badge-done{background:rgba(56,161,105,.15);color:#68D391}
+.dark .badge-new{background:rgba(91,200,245,.15);color:#5BC8F5}
+.dark .badge-lock{background:var(--bg);color:var(--muted)}
+/* DARK MODE TOGGLE */
+.dark-toggle{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0}
+.dark-toggle:hover{background:rgba(255,255,255,.2)}
+.dark-toggle svg{width:18px;height:18px;stroke:rgba(255,255,255,.7);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ═══════════════════════════════════════ SCREEN: HOME ═══════ -->
+<div id="screen-home" class="screen active">
+  <div class="home-header">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="home-greeting">RESSOURCES · GUIDES</div>
+      <button class="dark-toggle" onclick="toggleDarkMode()" aria-label="Mode sombre">
+        <svg id="dark-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+    <div class="home-title">Guides</div>
+    <div class="home-subtitle">11 guides · Référentiel terrain complet</div>
+    <div class="progress-summary">
+      <div class="prog-stat"><div class="prog-num" id="done-count">0</div><div class="prog-label">Modules vus</div></div>
+      <div class="prog-stat"><div class="prog-num" id="quiz-score">—</div><div class="prog-label">Score quiz</div></div>
+    </div>
+  </div>
+  <div class="scroll" id="home-scroll"></div>
+</div>
+
+<!-- ═══════════════════════════════════════ SCREEN: MODULE ═══════ -->
+<div id="screen-module" class="screen">
+  <div class="topbar">
+    <div class="topbar-back" onclick="goBack()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></div>
+    <div class="topbar-title" id="module-topbar-title">Module</div>
+  </div>
+  <div class="scroll" id="module-scroll"></div>
+</div>
+
+<!-- ═══════════════════════════════════════ SCREEN: FICHES ═══════ -->
+<div id="screen-fiches" class="screen">
+  <div class="home-header" style="background:#0D2B5E">
+    <div class="home-greeting">RÉFÉRENCE · TERRAIN</div>
+    <div class="home-title">Fiches</div>
+    <div class="home-subtitle" id="fiches-subtitle">16 fiches · Référence rapide terrain</div>
+    <div class="progress-summary" style="margin-top:12px">
+      <div class="prog-stat"><div class="prog-num" id="fiches-seen-count">0</div><div class="prog-label">Consultées</div></div>
+      <div class="prog-stat"><div class="prog-num" id="fiches-total-count">16</div><div class="prog-label">Total fiches</div></div>
+    </div>
+  </div>
+  <div class="search-wrap">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" id="fiches-search" placeholder="Rechercher partout…" oninput="filterFiches(this.value)" autocomplete="off" autocorrect="off">
+      <svg id="search-clear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none;cursor:pointer;stroke:var(--muted)" onclick="clearSearch()"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </div>
+  </div>
+  <div class="scroll" id="fiches-scroll"></div>
+</div>
+
+<!-- ═══════════════════════════════════════ SCREEN: FICHE DETAIL ═══════ -->
+<div id="screen-fiche-detail" class="screen">
+  <div class="topbar">
+    <div class="topbar-back" onclick="goBack('fiches')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></div>
+    <div class="topbar-title" id="fiche-topbar-title">Fiche</div>
+  </div>
+  <div class="scroll" id="fiche-detail-scroll"></div>
+</div>
+
+<!-- ═══════════════════════════════════════ SCREEN: ERREURS ═══════ -->
+<div id="screen-erreurs" class="screen">
+  <div class="home-header" style="background:#0D2B5E">
+    <div class="home-greeting">RÉFÉRENTIEL</div>
+    <div class="home-title">Règles</div>
+    <div class="home-subtitle">Erreurs terrain · Points légaux essentiels</div>
+  </div>
+  <div class="scroll" id="erreurs-scroll"></div>
+</div>
+
+<!-- ═══════════════════════════════════════ SCREEN: QUIZ ═══════ -->
+<div id="screen-quiz" class="screen">
+  <div class="home-header" style="background:#0D2B5E">
+    <div class="home-greeting">VALIDATION</div>
+    <div class="home-title">Quiz</div>
+    <div class="home-subtitle" id="quiz-subtitle">8 questions · Testez vos connaissances</div>
+  </div>
+  <div class="scroll" id="quiz-scroll"></div>
+</div>
+
+<!-- ═══════════════════════════════════════ TAB BAR ═══════════ -->
+<nav id="tabbar">
+  <div class="tab active" id="tab-home" onclick="switchTab('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+    <span>Guides</span>
+  </div>
+  <div class="tab" id="tab-fiches" onclick="switchTab('fiches')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    <span>Fiches</span>
+  </div>
+  <div class="tab" id="tab-erreurs" onclick="switchTab('erreurs')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span>Règles</span>
+  </div>
+  <div class="tab" id="tab-quiz" onclick="switchTab('quiz')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/><line x1="12" y1="9" x2="12" y2="9"/></svg>
+    <span>Quiz</span>
+  </div>
+</nav>
+
+</div><!-- #app -->
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════════════════
+
+const MODULES = [
+  {
+    id:1, emoji:'📋', color:'#EBF8FF', title:'Pourquoi un EDL ?',
+    sub:"Cadre légal & rôle de l'agent",
+    desc:"Le cadre légal de l'état des lieux, pourquoi c'est important et quel est votre rôle.",
+    content: `
+      <div class="section-bar">Définition légale</div>
+      <div class="info-blue">L'état des lieux est un constat contradictoire de l'état du logement, établi à l\'entrée ET à la sortie du locataire. Sans lui, les deux parties sont exposées.</div>
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px">Qui peut réaliser un EDL ?</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:#EBF8FF;border-radius:12px;padding:8px 12px;font-size:13px;color:var(--navy);font-weight:600">✅ Agent immobilier mandaté (Flatsy)</div>
+          <div style="background:#EBF8FF;border-radius:12px;padding:8px 12px;font-size:13px;color:var(--navy);font-weight:600">✅ Propriétaire et locataire ensemble</div>
+          <div style="background:#EBF8FF;border-radius:12px;padding:8px 12px;font-size:13px;color:var(--navy);font-weight:600">✅ Huissier (si désaccord)</div>
+          <div style="background:#FEF2F2;border-radius:12px;padding:8px 12px;font-size:13px;color:var(--red);font-weight:600">❌ Agent seul, sans le locataire</div>
+        </div>
+      </div>
+      <div class="section-bar">Loi ALUR – Points clés</div>
+      <div class="card">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="border-bottom:1px solid var(--border);padding-bottom:8px"><div style="font-weight:700;font-size:13px;color:var(--navy)">Délai de modification</div><div style="font-size:12px;color:var(--muted);margin-top:2px">10 jours à compter de la signature pour signaler un oubli</div></div>
+          <div style="border-bottom:1px solid var(--border);padding-bottom:8px"><div style="font-weight:700;font-size:13px;color:var(--navy)">Plafond honoraires</div><div style="font-size:12px;color:var(--muted);margin-top:2px">3 €/m² à la charge du locataire (loi ALUR)</div></div>
+          <div><div style="font-weight:700;font-size:13px;color:var(--navy)">Sans EDL d\'entrée</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Le logement est présumé en bon état — le locataire est protégé</div></div>
+        </div>
+      </div>
+      <div class="section-bar">Responsabilités</div>
+      <div class="card">
+        <div style="margin-bottom:10px"><div style="font-size:12px;font-weight:700;color:var(--flatsy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Locataire</div><div style="font-size:12px;color:var(--muted);line-height:1.6">Entretien courant · Petites réparations · Propreté · Joints sanitaires · Ampoules · Nettoyage VMC</div></div>
+        <div><div style="font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Propriétaire</div><div style="font-size:12px;color:var(--muted);line-height:1.6">Vétusté normale · Mise aux normes · Sécurité · Tableau électrique · Porte d\'entrée (hors dégradation) · Chauffe-eau</div></div>
+      </div>
+      <div class="section-bar">Quiz d'auto-évaluation</div>
+      <div id="module-quiz-1"></div>
+    `,
+    quiz:[
+      {q:"Que risque le propriétaire sans EDL d'entrée ?",
+       opts:["Rien, c'est facultatif","Le logement est présumé en bon etat, aucune retenue possible","Le depot de garantie est automatiquement bloque","Le locataire perd ses droits"],
+       correct:1,
+       exp:"Sans EDL d'entrée, le logement est présumé remis en bon etat. Le propriétaire ne peut retenir aucune somme sur le depot de garantie."},
+      {q:"Quel est le plafond d'honoraires EDL à charge du locataire (loi ALUR) ?",
+       opts:["1 €/m²","3 €/m²","5 €/m²","Aucun plafond"],
+       correct:1,
+       exp:"La loi ALUR plafonne les honoraires a 3 €/m² a la charge du locataire. Au-dela, le surplus est a la charge du propriétaire."},
+      {q:"Combien de jours après signature pour signaler un oubli ?",
+       opts:["48 heures","3 jours","10 jours","1 mois"],
+       correct:2,
+       exp:"Depuis la loi ALUR : 10 jours calendaires pour signaler un oubli ou une erreur après la signature de l'EDL d'entrée."}
+    ]
+  },
+  {
+    id:2, emoji:'📁', color:'#EBF8FF', title:'Préparer sa mission',
+    sub:'Pense-bête avant chaque visite',
+    desc:"Les réflexes avant d\'arriver sur place pour ne rien oublier.",
+    content: `
+      <div class="info-blue">🧠 Ce pense-bête ne remplace pas les templates Nockee — il vous aide à arriver prêt·e et à ne rien oublier d'important.</div>
+      <div class="section-bar">Avant de partir</div>
+      <div id="checklist-2" style="margin-bottom:16px"></div>
+      <div id="mod2-reset-wrap" style="margin-bottom:16px"></div>
+      <div class="section-bar">À dire à l'arrivée</div>
+      <div class="phrase-card arrival">
+        <div class="phrase-context">Phrase d'accueil</div>
+        <div class="phrase-text">"Bonjour, je suis [nom], mandaté(e) par [agence] via Flatsy. Nous allons visiter pièce par pièce, décrire et photographier. Nous relirons ensemble avant signature."</div>
+      </div>
+      <div class="section-bar">Ordre de visite recommandé</div>
+      <div style="background:#0D2B5E;border-radius:12px;padding:16px 16px;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:700;color:#5BC8F5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">🔴 Toujours commencer par</div>
+        <div style="display:flex;gap:8px;margin-bottom:4px">
+          <div style="flex:1;background:rgba(0,191,234,0.15);border:1.5px solid #5BC8F5;border-radius:12px;padding:12px;text-align:center">
+            <div style="font-size:22px;margin-bottom:4px">🗝️</div>
+            <div style="font-size:13px;font-weight:700;color:white">1. Annexes</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:2px">Cave · Parking · Grenier</div>
+          </div>
+          <div style="flex:1;background:rgba(0,191,234,0.15);border:1.5px solid #5BC8F5;border-radius:12px;padding:12px;text-align:center">
+            <div style="font-size:22px;margin-bottom:4px">🔢</div>
+            <div style="font-size:13px;font-weight:700;color:white">2. Compteurs</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:2px">Eau · Élec · Gaz</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:rgba(255,255,255,.45);margin-top:8px;line-height:1.4">⚡ Si vous oubliez les compteurs, l'EDL est incomplet — litige garanti</div>
+      </div>
+      <div class="card">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Puis dans le logement</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${['3. Entrée & porte palière','4. Séjour / Salon','5. Cuisine','6. Chambres (par position)','7. Salle de bain','8. WC','9. Couloir & rangements','10. Relecture & signature'].map(s=>`<span style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--text)">${s}</span>`).join('')}
+        </div>
+      </div>
+      <div class="info-yellow">⚠️ Nommer les chambres par position : <strong>Chambre côté rue</strong>, <strong>Chambre fond couloir</strong> — jamais "Chambre 1/2"</div>
+
+      <div class="section-bar">Clés & accès — Protocole obligatoire</div>
+      <div class="card">
+        <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px">Le détail des clés est une <strong>mention légalement obligatoire</strong> (décret 2016-382). À noter systématiquement dans Nockee avant tout autre chose.</div>
+        <div style="background:#0D2B5E;border-radius:12px;padding:12px;margin-bottom:10px">
+          <div style="font-size:12px;font-weight:700;color:#5BC8F5;margin-bottom:8px;text-transform:uppercase">Compter, tester, photographier — dans cet ordre</div>
+          ${[
+            ["Porte d'entrée","Nombre exact d'exemplaires"],
+            ["Boîte aux lettres","1 ou 2 clés selon cas"],
+            ["Porte d'immeuble / hall","Clé, badge ou digicode à noter"],
+            ["Cave / cellier","Seulement si inclus dans le bail"],
+            ["Parking / garage","Clé + télécommande + badge si applicable"],
+            ["Volets motorisés","Télécommande si présente"],
+            ["Visiophone / portail","Badge ou code remis au locataire"]
+          ].map(([k,v])=>`<div style="display:flex;justify-content:space-between;margin-bottom:5px;padding-bottom:5px;border-bottom:1px solid rgba(255,255,255,.08)">
+            <span style="font-size:12px;font-weight:700;color:var(--border)">🔑 ${k}</span>
+            <span style="font-size:12px;color:var(--muted)">${v}</span>
+          </div>`).join('')}
+        </div>
+        <div style="background:#FEF2F2;border-radius:8px;padding:12px;font-size:12px;color:#E53E3E;line-height:1.5"><strong>Photographier le trousseau complet</strong> remis au locataire. En cas de clé non restituée à la sortie, c'est la seule preuve pour justifier une retenue.</div>
+      </div>
+      <div class="section-bar">Quiz d'auto-évaluation</div>
+      <div id="module-quiz-2"></div>
+    `,
+    checklist: [
+      "Mission reçue dans l'app Flatsy ✓",
+      'Adresse et heure vérifiées',
+      'Coordonnées du locataire notées',
+      'Application Nockee ouverte + dossier prêt',
+      'Batterie téléphone chargée',
+      'Clés récupérées ou confirmées',
+      'Type de logement connu (meublé ?)',
+    ],
+    quiz:[
+      {q:"Dans quel ordre doit-on commencer la visite ?",
+       opts:["Entree puis Sejour puis Cuisine","Annexes puis Compteurs puis le logement","Compteurs d'abord seulement","Cuisine et salle de bain en premier"],
+       correct:1,
+       exp:"Toujours commencer par les Annexes (cave, parking), puis les Compteurs, avant d'entrer. C'est le sujet numéro 1 de litige chez Flatsy."},
+      {q:"Comment nommer les chambres dans Nockee ?",
+       opts:["Chambre 1, Chambre 2","Chambre principale, Chambre secondaire","Chambre côté rue, Chambre fond couloir","Petite chambre, Grande chambre"],
+       correct:2,
+       exp:"Toujours nommer par position géographique : côté rue, fond couloir, côté cour. Jamais de numéro — ambiguïté lors de la comparaison a la sortie."},
+      {q:"Que vérifier en priorité avant de partir en mission ?",
+       opts:["Juste l'adresse","Adresse, heure, Nockee prêt, batterie chargée, clés confirmees","Seulement l'application Nockee","La batterie du telephone suffit"],
+       correct:1,
+       exp:"Check complet : adresse + heure, coordonnées locataire, Nockee ouvert + dossier prêt, batterie chargée, clés récupérées ou confirmées."}
+    ]
+  },
+  {
+    id:3, emoji:'🏠', color:'#FFFBEB', title:'Évaluer les revêtements',
+    sub:'Sols · Murs · Plafonds',
+    desc:'Comment décrire précisément chaque surface avec les bonnes formulations.',
+    content: `
+      <div class="section-bar">Échelle Nockee — Rappel</div>
+      <div class="scale-row">
+        <div class="scale-item neuf"><div class="scale-name">Neuf</div><div class="scale-def">Jamais utilisé</div></div>
+        <div class="scale-item bon"><div class="scale-name">Bon</div><div class="scale-def">Propre & fonctionnel</div></div>
+        <div class="scale-item moyen"><div class="scale-name">Moyen</div><div class="scale-def">Défauts légers</div></div>
+        <div class="scale-item mauvais"><div class="scale-name">Mauvais</div><div class="scale-def">Abîmé / sale</div></div>
+      </div>
+      <div class="info-yellow">⚠️ Ne jamais écrire <strong>« abîmé par le temps »</strong> ni <strong>« usure normale »</strong> — ces termes qualifient la vétusté (charge du propriétaire).</div>
+      <div class="section-bar">Sols</div>
+      <div class="card">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">${['Parquet','Carrelage','Moquette','PVC / Vinyle','Béton ciré','Tomette','Marbre'].map(t=>`<span style="background:#E8ECF2;color:var(--navy);font-size:12px;font-weight:600;padding:4px 8px;border-radius:20px">${t}</span>`).join('')}</div>
+        <div class="state-row good"><div class="state-label good">Bon</div><div class="state-text">« Parquet contrecollé, bon état général, légères rayures de surface »</div></div>
+        <div class="state-row medium"><div class="state-label medium">Moyen</div><div class="state-text">« Carrelage 60×60, 2 carreaux fissurés au centre, joint époxy à reprendre angle SDB »</div></div>
+        <div class="state-row bad"><div class="state-label bad">Mauvais</div><div class="state-text">« PVC vinyle, déchirure 20 cm près de la baie, bord décollé sur 40 cm »</div></div>
+      </div>
+      <div class="section-bar">Murs</div>
+      <div class="card">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">${['Peinture','Papier peint','Faïence','Enduit lisse','Crépi'].map(t=>`<span style="background:#E8ECF2;color:var(--navy);font-size:12px;font-weight:600;padding:4px 8px;border-radius:20px">${t}</span>`).join('')}</div>
+        <div class="state-row good"><div class="state-label good">Bon</div><div class="state-text">« Peinture blanche, légères marques de frottement, couleur uniforme »</div></div>
+        <div class="state-row medium"><div class="state-label medium">Moyen</div><div class="state-text">« Papier peint décollé angle haut gauche fenêtre, environ 10 cm »</div></div>
+        <div class="state-row bad"><div class="state-label bad">Mauvais</div><div class="state-text">« Enduit : fissure traversante 30 cm, auréole humidité 40 cm sous fenêtre »</div></div>
+      </div>
+      <div class="section-bar">Plafond</div>
+      <div class="card">
+        <div class="state-row good"><div class="state-label good">Bon</div><div class="state-text">« Peinture blanche, aucune fissure, uniforme »</div></div>
+        <div class="state-row medium"><div class="state-label medium">Moyen</div><div class="state-text">« Auréole jaunâtre 20 cm, probablement ancienne infiltration »</div></div>
+        <div class="state-row bad"><div class="state-label bad">Mauvais</div><div class="state-text">« Peinture écaillée sur 40 cm², traces d'infiltration récente »</div></div>
+      </div>
+      <div class="section-bar">Formulations efficaces</div>
+      <div class="card">
+        <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px">Les formulations qui font la difference :</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:#EBF8FF;border-radius:12px;padding:8px 12px"><div style="font-size:12px;font-weight:700;color:#38A169;margin-bottom:3px">✅ BIEN</div><div style="font-size:12px;color:var(--text)">"Carrelage blanc 20x20, 3 carreaux fissures angle SDB, joint peripheral complet"</div></div>
+          <div style="background:#FEF2F2;border-radius:12px;padding:8px 12px"><div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:3px">❌ A EVITER</div><div style="font-size:12px;color:var(--text)">"Carrelage abime par le temps" · "Sol use" · "Peinture vieille"</div></div>
+          <div style="background:#EBF8FF;border-radius:12px;padding:8px 12px"><div style="font-size:12px;font-weight:700;color:#38A169;margin-bottom:3px">✅ BIEN</div><div style="font-size:12px;color:var(--text)">"Papier peint fleuri, décollé sur 15cm angle haut gauche fenetre chambre"</div></div>
+          <div style="background:#EBF8FF;border-radius:12px;padding:8px 12px"><div style="font-size:12px;font-weight:700;color:#38A169;margin-bottom:3px">✅ BIEN</div><div style="font-size:12px;color:var(--text)">"Parquet chene contrecolle, 2 lames bourdonnantes pres du radiateur, surface propre"</div></div>
+        </div>
+      </div>
+      <div class="section-bar">Couleurs & descriptions</div>
+      <div class="card">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Toujours noter la couleur et le materiau — utile pour comparaison a la sortie :</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${['Blanc cassé','Blanc pur','Beige','Gris clair','Gris anthracite','Écru','Taupe','Bleu pastel','Vert sauge','Terracotta'].map(c=>`<span style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--text)">${c}</span>`).join('')}
+        </div>
+      </div>
+      <div class="section-bar">Quiz d'auto-évaluation</div>
+      <div id="module-quiz-3"></div>
+    `,
+    quiz: [
+      {q:"Quelle formulation est correcte pour un sol PVC décollé ?",opts:["PVC abîmé par l'usure","PVC vinyle, bord décollé 40 cm près de la baie","Vieux PVC à changer","Sol en mauvais état général"],correct:1,exp:"On décrit précisément : matériau + localisation + dimension. Jamais de termes subjectifs."},
+      {q:"Joints noircis en salle de bain = quel état Nockee ?",opts:["État moyen","Mauvais état","Usure normale","Neuf"],correct:1,exp:"Joints noircis = mauvais état. À noter et photographier."},
+      {q:"Mot à ne jamais écrire dans un EDL :",opts:["fissuré","décollé","vétuste","écaillé"],correct:2,exp:"« Vétuste » (et usure, usage, ancien, vieux, tartre) qualifie automatiquement la charge du propriétaire."}
+    ]
+  },
+  {
+    id:4, emoji:'🔧', color:'#FFFFFF', title:'Équipements & menuiseries',
+    sub:'Portes · Fenêtres · Plomberie · Électricité',
+    desc:'Comment tester et formuler chaque équipement, avec les pièges à éviter.',
+    content: `
+      <div class="section-bar">Portes intérieures</div>
+      <div class="card">
+        <div class="state-row good"><div class="state-label good">Bon</div><div class="state-text">« Porte SDB, ferme normalement, serrure loquet fonctionnelle »</div></div>
+        <div class="state-row medium"><div class="state-label medium">Moyen</div><div class="state-text">« Légère résistance à la fermeture, joint bas de porte usé »</div></div>
+        <div class="state-row bad"><div class="state-label bad">Mauvais</div><div class="state-text">« Battant coincé — impossible à fermer, encadrement déformé »</div></div>
+      </div>
+      <div class="info-red">🔴 <strong>Porte palière — CRITIQUE</strong> : Vérifier en priorité serrure multipoints, joint d'étanchéité, fermeture complète. Photo obligatoire si défaut.</div>
+      <div class="section-bar">Fenêtres</div>
+      <div class="card">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">${['Simple vitrage','Double vitrage','Oscillo-battant','Coulissante','Fixe'].map(t=>`<span style="background:#E8ECF2;color:var(--navy);font-size:12px;font-weight:600;padding:4px 8px;border-radius:20px">${t}</span>`).join('')}</div>
+        <div class="info-yellow" style="margin-top:8px">⚠️ Oscillo-battant : tester les <strong>DEUX positions</strong> (bascule ET rotation)</div>
+      </div>
+      <div class="section-bar">Plomberie</div>
+      <div class="card">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="border-bottom:1px solid var(--border);padding-bottom:8px"><div style="font-weight:700;font-size:13px;color:var(--navy)">Joints</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Blanc = bon · Jaune = état moyen · Noir = mauvais état</div></div>
+          <div style="border-bottom:1px solid var(--border);padding-bottom:8px"><div style="font-weight:700;font-size:13px;color:var(--navy)">Robinetterie</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Tester chaud/froid · Vérifier absence de fuite · Noter calcaire visible</div></div>
+          <div><div style="font-weight:700;font-size:13px;color:var(--navy)">Meublé sous évier</div><div style="font-size:12px;color:var(--muted);margin-top:2px">⚠️ Toujours ouvrir — les fuites s'y cachent</div></div>
+        </div>
+      </div>
+      <div class="section-bar">Électricité</div>
+      <div class="card">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="border-bottom:1px solid var(--border);padding-bottom:8px"><div style="font-weight:700;font-size:13px;color:var(--navy)">Compteur Linky</div><div style="font-size:12px;color:var(--muted);margin-top:2px">PRM = 14 chiffres · Relever <strong>1 seul index</strong> · Photo obligatoire</div></div>
+          <div><div style="font-weight:700;font-size:13px;color:var(--navy)">Prises & interrupteurs</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Tester chaque prise · noter déboîtée ou absente</div></div>
+        </div>
+      </div>
+      <div class="section-bar">Volets & occultants</div>
+      <div class="card">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">${['Volet roulant électrique','Volet roulant manuel','Persienne','Volet battant bois','Store banne'].map(t=>`<span style="background:#E8ECF2;color:var(--navy);font-size:12px;font-weight:600;padding:4px 8px;border-radius:20px">${t}</span>`).join('')}</div>
+        <div class="state-row good"><div class="state-label good">Bon</div><div class="state-text">« Volet roulant électrique, descente et remontee completes, lames sans déformation »</div></div>
+        <div class="state-row bad"><div class="state-label bad">Mauvais</div><div class="state-text">« Volet roulant manuel, manivelle bloquée, impossible de remonter completement »</div></div>
+        <div class="info-yellow" style="margin-top:8px">⚠️ Tester chaque volet : descente + remontee complète. Un volet bloque = mauvais etat + photo obligatoire.</div>
+      </div>
+      <div class="section-bar">Interphone & sonnette</div>
+      <div class="card">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="border-bottom:1px solid var(--border);padding-bottom:8px"><div style="font-weight:700;font-size:13px;color:var(--navy)">Interphone</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Tester la communication + ouverture porte · Note : fonctionnel ou non fonctionnel</div></div>
+          <div><div style="font-weight:700;font-size:13px;color:var(--navy)">Sonnette / Visiophone</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Tester le bouton et la sonnerie audible depuis le logement</div></div>
+        </div>
+      </div>
+      <div class="section-bar">VMC & ventilation</div>
+      <div class="card">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="border-bottom:1px solid var(--border);padding-bottom:8px"><div style="font-weight:700;font-size:13px;color:var(--navy)">Test VMC</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Approcher une main de la grille · Verifier la succion · Nettoye ou encrassee</div></div>
+          <div><div style="font-weight:700;font-size:13px;color:var(--navy)">Grilles de ventilation</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Etat de la grille (propre / encrassee / abimee) + note si grille bouchee</div></div>
+        </div>
+        <div class="info-blue" style="margin-top:8px">💡 Nettoyage VMC = obligation locataire. Grille tres encrassee → mauvais etat.</div>
+      </div>
+
+      <div class="section-bar">Moisissures & humidité — qui est responsable ?</div>
+      <div class="card">
+        <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px">Les moisissures sont un des sujets les plus litigieux. La responsabilité dépend de la <strong>cause</strong>, pas du symptôme visible.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div style="background:#FEF2F2;border-radius:12px;padding:12px">
+            <div style="font-size:12px;font-weight:700;color:#E53E3E;text-transform:uppercase;margin-bottom:6px">Propriétaire</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.6">• VMC absente ou hors service<br>• Pont thermique / façade mal isolée<br>• Infiltration toiture ou façade<br>• Fenêtres simple vitrage condensantes</div>
+          </div>
+          <div style="background:#FFFBEB;border-radius:12px;padding:12px">
+            <div style="font-size:12px;font-weight:700;color:#F59E0B;text-transform:uppercase;margin-bottom:6px">Locataire</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.6">• VMC bouchée ou filtre encrassé<br>• Séchage linge en intérieur<br>• Aération insuffisante<br>• Calfeutrage excessif des fenêtres</div>
+          </div>
+        </div>
+        <div style="background:#F7F9FC;border-radius:8px;padding:12px">
+          <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:6px">Comment noter dans Nockee</div>
+          ${[
+            ["Traces localisées autour fenêtres","Condensation liée au simple vitrage ou pont thermique → propriétaire probable"],
+            ["Moisissures angle plafond/mur salle de bain","VMC à vérifier en priorité — noter si elle fonctionne"],
+            ["Taches noires derrière les meubles","Circulation d'air insuffisante — peut être locataire"],
+            ["Humidité montante (murs bas)","Problème de bâti — propriétaire"]
+          ].map(([k,v])=>`<div style="margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid #E2E8F0">
+            <div style="font-size:12px;font-weight:700;color:var(--navy)">${k}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">${v}</div>
+          </div>`).join('')}
+        </div>
+      </div>
+      <div class="info-yellow">⚠️ Ne jamais qualifier la responsabilité dans l'EDL. Décrire les faits : <em>"Traces noires sur joint silicone angle douche, VMC en fonctionnement normal"</em>. La décision appartient aux parties, pas à l'agent.</div>
+      <div class="section-bar">Quiz d'auto-évaluation</div>
+      <div id="module-quiz-4"></div>
+    `,
+    quiz:[
+      {q:"Que vérifier en PRIORITÉ sur la porte palière ?",
+       opts:["La couleur et la peinture","La serrure multipoints, le joint et la fermeture complète","Le numéro de l'appartement","L'etat de la poignee"],
+       correct:1,
+       exp:"Porte palière = élément de sécurité critique. Serrure multipoints, joint d'étanchéité, fermeture complète. Photo obligatoire si défaut."},
+      {q:"Comment tester une fenêtre oscillo-battante ?",
+       opts:["Juste l'ouvrir en rotation","Seulement la position bascule","Tester les DEUX positions : bascule ET rotation","La regarder sans toucher"],
+       correct:2,
+       exp:"Deux positions à tester : rotation (ouverture classique) et bascule (ouverture inclinée). Noter si l'une est bloquée."},
+      {q:"Pourquoi toujours ouvrir le meublé sous évier ?",
+       opts:["Pour inventorier les produits","Pour vérifier le rangement","Les fuites s'y cachent, invisibles autrement","Pour noter la marque de la plomberie"],
+       correct:2,
+       exp:"Le meublé sous evier dissimule souvent fuites actives ou traces d'humidité. Toujours ouvrir et photographier si défaut constate."}
+    ]
+  },
+  {
+    id:5, emoji:'🔢', color:'#FFFFFF', title:'Compteurs & Chauffage',
+    sub:'Sujet n°1 de litige · Formules officielles',
+    desc:"Le relevé de compteurs est la cause principale des litiges. Un index manquant ou flou = dispute garantie.",
+    quiz:[
+      {q:"Combien d'index faut-il relever sur un compteur Linky ?",
+       opts:["Tous les index affichés","2 index (HP et HC)","1 seul index","Le PRM uniquement"],
+       correct:2,
+       exp:"Le Linky affiche plusieurs informations mais on relève 1 seul index. Toujours photographier l\'écran complet."},
+      {q:"Que faire si le chauffage ne s\'allume pas hors saison (été) ?",
+       opts:["Écrire : radiateur en panne","Écrire : non testé","Écrire : non vérifiable hors période de chauffe","Ne rien noter"],
+       correct:2,
+       exp:"Formulation standard acceptée : 'Radiateur : non vérifiable hors période de chauffe'. Protège l'agent et l'agence."},
+      {q:"Que se passe-t-il si les index compteurs ne sont pas relevés ?",
+       opts:["Rien, le bailleur s'en charge","Litige quasi certain sur les consommations","L'EDL est annulé","Le locataire doit les relever seul"],
+       correct:1,
+       exp:"Sans index valides et photographiés, impossible de facturer les consommations ou de prouver l'état à l'entrée. C'est la cause n°1 de litige chez Flatsy."}
+    ],
+    content: `
+      <div style="background:#0D2B5E;border-radius:12px;padding:16px;margin-bottom:16px">
+        <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">⚠️ SUJET N°1 DE LITIGE CHEZ FLATSY</div>
+        <div style="font-size:16px;font-weight:700;color:white;line-height:1.4">Un index manquant ou illisible = impossible de facturer les consommations = dispute garantie</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.65);margin-top:8px">Règle absolue : photo de chaque compteur AVANT de monter dans le logement</div>
+      </div>
+
+      <div class="section-bar">Procédure — Dans cet ordre</div>
+      <div style="background:var(--navy);border-radius:12px;padding:16px;margin-bottom:14px">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${[
+            ['1','📷','Photographier le compteur en entier (numéro + index visibles)'],
+            ['2','🔢','Relever le numéro de compteur (ou PRM pour élec)'],
+            ['3','📝','Saisir l\'index exact dans Nockee'],
+            ['4','✅','Vérifier que la photo est nette avant de passer au suivant']
+          ].map(([n,e,t])=>`<div style="display:flex;align-items:center;gap:8px">
+            <span style="min-width:24px;height:24px;background:#5BC8F5;color:var(--navy);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">${n}</span>
+            <span style="font-size:16px;flex-shrink:0">${e}</span>
+            <span style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.4">${t}</span>
+          </div>`).join('')}
+        </div>
+      </div>
+
+      <div class="section-bar">Les 4 types de compteurs</div>
+
+      <div style="border-radius:12px;overflow:hidden;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+        <div style="background:#0D2B5E;padding:12px 16px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:20px">⚡</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:white">Électricité — Linky</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.55);margin-top:1px">Numéro PRM · 1 index kWh</div>
+          </div>
+          <span style="margin-left:auto;background:#5BC8F5;color:var(--navy);font-size:12px;font-weight:700;padding:4px 9px;border-radius:20px;flex-shrink:0">📷 OBLIGATOIRE</span>
+        </div>
+        <div style="background:white;padding:12px 16px">
+          <div style="display:flex;gap:8px;margin-bottom:10px">
+            <div style="flex:1;background:#EBF8FF;border-radius:12px;padding:8px 12px;text-align:center">
+              <div style="font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px">PRM</div>
+              <div style="font-size:16px;font-weight:900;color:var(--navy)">14 chiffres</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px">09 123 456 789 012</div>
+            </div>
+            <div style="flex:1;background:#EBF8FF;border-radius:12px;padding:8px 12px;text-align:center">
+              <div style="font-size:12px;font-weight:700;color:#38A169;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px">INDEX</div>
+              <div style="font-size:16px;font-weight:900;color:var(--navy)">1 seul</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px">Affiché en kWh</div>
+            </div>
+          </div>
+          <div style="background:#FEF2F2;border-radius:12px;padding:8px 12px;display:flex;gap:8px;align-items:flex-start;margin-bottom:8px">
+            <span style="font-size:14px;flex-shrink:0">⚠️</span>
+            <div style="font-size:12px;color:#E53E3E;line-height:1.5"><strong>Piège n°1 :</strong> photographier l'écran de veille sans index. Appuyer sur le bouton pour afficher l'index AVANT la photo.</div>
+          </div>
+          <div style="font-size:12px;color:var(--muted)">+ Tableau de répartition : état (fusibles, disjoncteurs) + photo</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+          <div style="background:#0D2B5E;padding:8px 12px">
+            <div style="font-size:18px;margin-bottom:3px">💧</div>
+            <div style="font-size:12px;font-weight:700;color:white">Eau froide</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:1px">Numéro · Index m³</div>
+          </div>
+          <div style="background:white;padding:8px 12px">
+            <div style="font-size:12px;color:var(--text);line-height:1.6">Numéro gravé sur façade<br>Index en <strong>m³</strong><br>📷 Photo obligatoire</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:6px;border-top:1px solid var(--border);padding-top:6px">⚠️ Sous-compteur possible dans le logement</div>
+          </div>
+        </div>
+        <div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+          <div style="background:#0D2B5E;padding:8px 12px">
+            <div style="font-size:18px;margin-bottom:3px">🔥</div>
+            <div style="font-size:12px;font-weight:700;color:white">Eau chaude</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:1px">Si présent</div>
+          </div>
+          <div style="background:white;padding:8px 12px">
+            <div style="font-size:12px;color:var(--text);line-height:1.6">Même procédure eau froide<br>Index en <strong>m³</strong><br>📷 Photo obligatoire</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:6px;border-top:1px solid var(--border);padding-top:6px">Uniquement si chauffage collectif</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="border-radius:12px;overflow:hidden;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+        <div style="background:#F59E0B;padding:12px 16px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:20px">🔥</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:white">Gaz</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.55);margin-top:1px">Numéro PCE · Index m³ · Souvent en cave</div>
+          </div>
+          <span style="margin-left:auto;background:rgba(255,255,255,.2);color:white;font-size:12px;font-weight:700;padding:4px 9px;border-radius:20px;flex-shrink:0">📷 OBLIGATOIRE</span>
+        </div>
+        <div style="background:white;padding:8px 12px">
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            ${['PCE = Point de Comptage','Index en m³','Cave ou local technique'].map(t=>`<span style="background:#FFFBEB;color:#F59E0B;font-size:12px;font-weight:600;padding:4px 8px;border-radius:20px">${t}</span>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div style="background:linear-gradient(135deg,#FFFFFF,#FFFFFF);border-radius:12px;padding:12px 16px;border-left:4px solid #E53E3E;margin-bottom:4px">
+        <div style="font-size:12px;font-weight:700;color:#E53E3E;margin-bottom:4px">⛔ Compteur absent ou inaccessible</div>
+        <div style="font-size:12px;color:#E53E3E;line-height:1.5">Écrire dans Nockee : <strong>"non accessible — [raison précise]"</strong>. Ne jamais laisser le champ vide. Un champ vide = litige assuré.</div>
+      </div>
+
+      <div class="section-bar">🔥 Chauffage — La formule officielle</div>
+      <div class="code-box">
+        <div class="code-label">À copier mot pour mot dans Nockee</div>
+        <div class="code-text">"S'allume · fonctionnement complet non vérifiable"</div>
+      </div>
+      <div class="info-blue">Cette formule s'applique à TOUS les équipements de chauffage sans exception. Elle vous protège des contestations.</div>
+      <div class="card">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${[
+            ['Convecteur électrique','Grille de soufflage visible · allumer + formule'],
+            ['Radiateur à inertie','Corps céramique ou fonte · allumer + formule'],
+            ['Radiateur eau chaude','Robinet sur le côté · formule uniquement (collectif)'],
+            ['Plancher chauffant','Pas de radiateur visible · noter type + formule'],
+            ['Clim réversible','Unité murale + télécommande · tester les 2 modes + formule'],
+            ['Chaudière','Marque + modèle + date entretien (si étiquette) + formule']
+          ].map(([n,d])=>`<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
+            <div style="font-size:13px;font-weight:700;color:var(--navy);min-width:130px">${n}</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.4">${d}</div>
+          </div>`).join('')}
+        </div>
+      </div>
+      <div class="info-yellow">Hors saison (avril–septembre) : <em>"Radiateur : non vérifiable hors période de chauffe"</em> — formulation acceptée</div>
+
+      <div class="section-bar">Les 3 erreurs qui coûtent cher</div>
+      <div class="card" style="background:#FFFFFF">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${[
+            ['Photo sans index visible',"L\'écran de veille ne montre pas l\'index. Appuyer sur le bouton avant de photographier."],
+            ['Index noté sans photo','Le chiffre seul est contestable. Photo + chiffre = preuve irréfutable.'],
+            ['Compteur inaccessible non documenté','Écrire inaccessible sans raison = non recevable. Toujours préciser pourquoi.']
+          ].map(([t,d])=>`<div style="background:white;border-radius:12px;padding:8px 12px">
+            <div style="font-size:12px;font-weight:700;color:var(--red)">❌ ${t}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4">${d}</div>
+          </div>`).join('')}
+        </div>
+      </div>
+
+      <div class="section-bar">Quiz d'auto-évaluation</div>
+      <div id="module-quiz-5"></div>
+    `
+  },
+  {
+    id:6, emoji:'🍳', color:'#FFFBEB', title:'Cuisine équipée',
+    sub:'Électroménager · Meubles · Logement meublé',
+    desc:"Comment tester chaque appareil et ce qu'il faut photographier systématiquement.",
+    quiz:[
+      {q:"Que faire si le lave-vaisselle est présent mais ne démarre pas ?",
+       opts:["Ne rien noter","Écrire : en panne","Écrire : ne s\'allume pas + photo","Ignorer et passer à la suite"],
+       correct:2,
+       exp:"Même si l'appareil ne fonctionne pas, on le note et on photographie. 'Ne s\'allume pas' est une formulation valide."},
+      {q:"En logement meublé, combien de documents faut-il remplir dans Nockee ?",
+       opts:["1 seul document EDL","2 documents : EDL + Inventaire","3 documents : EDL + Inventaire + Photos","Aucun si tout est en bon état"],
+       correct:1,
+       exp:"EDL = état du logement (fixes). Inventaire = liste des meubles et équipements mobiles. Les deux doivent être signés séparément."},
+      {q:"Que noter pour un four dont on ne peut pas vérifier la chauffe complète ?",
+       opts:["Four : fonctionnel","Four : s\'allume · fonctionnement complet non vérifiable","Four : en bon état apparent","Four : non testé"],
+       correct:1,
+       exp:"La formule standard s'applique aussi au four. On allume, on constate ce qu'on peut, et on précise la limite de vérification."}
+    ],
+    content: `
+      <div style="background:var(--navy);border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+        <div style="font-size:20px">📷</div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#5BC8F5">PHOTO OBLIGATOIRE — chaque appareil</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:1px">Photographier allumé si possible · Photo état extérieur + intérieur</div>
+        </div>
+      </div>
+
+      <div class="section-bar">Électroménager — Procédure</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:4px">
+        ${[
+          {color:'#FFFFFF',accent:'#E53E3E',badge:'FEU',name:'Plaques',steps:['Allumer chaque feu un par un','Photographier chaque plaque allumée','Noter celles qui ne s\'allument pas']},
+          {color:'#FFFBEB',accent:'#F59E0B',badge:'FOUR',name:'Four',steps:['Allumer + vérifier la chauffe','Tester éclairage intérieur','Photo porte ouverte + écran de commande']},
+          {color:'#EBF8FF',accent:'#0D2B5E',badge:'HOTTE',name:'Hotte aspirante',steps:['Allumer vitesse 1 puis vitesse 2','Tester lumière intégrée','Vérifier état du filtre visible']},
+          {color:'#EBF8FF',accent:'#38A169',badge:'FRIGO',name:'Réfrigérateur',steps:['Vérifier mise en froid','Contrôler joint de porte','Photo intérieur + tiroirs']},
+          {color:'#EBF8FF',accent:'#0D2B5E',badge:'LV',name:'Lave-vaisselle',steps:['Allumer et vérifier le démarrage','Ouvrir meuble dessous : aucune fuite','Photo intérieur + joints']},
+          {color:'#EBF8FF',accent:'#0D2B5E',badge:'MO',name:'Micro-ondes',steps:['Allumer — plateau tournant OK ?','Vérifier éclairage intérieur','Photo façade + intérieur']},
+          {color:'#EBF8FF',accent:'#0D2B5E',badge:'LL',name:'Lave-linge',steps:['Allumer — cycle visible','Vérifier joints hublot (état)','Contrôler aucune fuite dessous']}
+        ].map(({color,accent,badge,name,steps})=>`
+          <div style="background:white;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);border:1px solid var(--border)">
+            <div style="background:${color};padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(0,0,0,.05)">
+              <span style="background:${accent};color:white;font-size:12px;font-weight:700;padding:4px 8px;border-radius:6px;letter-spacing:.5px">${badge}</span>
+              <span style="font-size:14px;font-weight:700;color:var(--navy)">${name}</span>
+              <span style="margin-left:auto;background:var(--navy);color:#5BC8F5;font-size:12px;font-weight:700;padding:4px 8px;border-radius:6px;flex-shrink:0">PHOTO</span>
+            </div>
+            <div style="padding:8px 12px">
+              ${steps.map((s,i)=>`<div style="display:flex;align-items:flex-start;gap:8px;${i<steps.length-1?'margin-bottom:5px':''}">
+                <span style="min-width:16px;height:16px;background:${color};border:1.5px solid ${accent};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:${accent};flex-shrink:0;margin-top:1px">${i+1}</span>
+                <span style="font-size:12px;color:var(--text);line-height:1.4">${s}</span>
+              </div>`).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>      </div>
+
+      <div class="section-bar">Meubles & plan de travail</div>
+      <div class="card">
+        <div class="state-row good"><div class="state-label good">Bon</div><div class="state-text">« Meubles bas et hauts : façades sans choc, charnières fonctionnelles, plan de travail sans rayure »</div></div>
+        <div class="state-row medium"><div class="state-label medium">Moyen</div><div class="state-text">« Façade meublé sous évier : égratignure 5 cm, charnière porte droite à régler »</div></div>
+        <div class="state-row bad"><div class="state-label bad">Mauvais</div><div class="state-text">« Plan de travail : brûlure 3 cm côté plaques, tache incrustée côté évier »</div></div>
+      </div>
+      <div class="info-yellow">⚠️ Toujours ouvrir le meublé sous évier — les fuites s'y cachent systématiquement</div>
+
+      <div class="section-bar">Logement meublé — Règle spéciale</div>
+      <div style="background:#FFFBEB;border:1.5px solid #F59E0B;border-radius:12px;padding:16px;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:700;color:var(--amber);text-transform:uppercase;margin-bottom:8px">⚠️ 2 DOCUMENTS DANS NOCKEE</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:13px;color:var(--text)">📄 <strong>EDL</strong> → État du logement (revêtements, équipements fixes, menuiseries)</div>
+          <div style="font-size:13px;color:var(--text)">📋 <strong>Inventaire</strong> → Liste des meubles et petits équipements (lit, table, verres, couverts…)</div>
+        </div>
+        <div style="font-size:12px;color:var(--amber);font-weight:700;margin-top:8px">Les deux doivent être renseignés et signés séparément.</div>
+      </div>
+
+      <div class="two-cols">
+        <div class="col-good">
+          <div class="col-head">Formulations OK</div>
+          <div class="col-item">✅ S'allume · fct non vérifiable</div>
+          <div class="col-item">✅ Fonctionne</div>
+          <div class="col-item">✅ Ne s'allume pas</div>
+        </div>
+        <div class="col-bad">
+          <div class="col-head">À éviter</div>
+          <div class="col-item">❌ Semble fonctionner</div>
+          <div class="col-item">❌ Paraît correct</div>
+          <div class="col-item">❌ Testé — OK</div>
+        </div>
+      </div>
+
+      <div class="section-bar">Quiz d'auto-évaluation</div>
+      <div id="module-quiz-6"></div>
+    `
+  },
+  {
+    id:7, emoji:'🚿', color:'#EBF8FF', title:'Salle de bain',
+    sub:'Joints · Plomberie · VMC · Équipements',
+    desc:"La salle de bain concentre les litiges humidité. Joints, étanchéité et VMC sont les 3 points critiques.",
+    quiz:[
+      {q:"Joints silicone noircis autour de la baignoire = quel état Nockee ?",
+       opts:["Bon état, c'est normal","État moyen","Mauvais état","Usure normale, charge propriétaire"],
+       correct:2,
+       exp:"Joints noircis = mauvais état. L'entretien des joints est à la charge du locataire. À noter et photographier — cause fréquente de dégâts des eaux."},
+      {q:"Comment noter du calcaire visible sur la robinetterie ?",
+       opts:["Usure normale, rien à noter","Mauvais état — calcaire excessif","État moyen, dépôts calcaires visibles","Dégradation imputable au locataire"],
+       correct:2,
+       exp:"Formulation type : 'Robinetterie, dépôts calcaires visibles sur le bec'. Factuel et neutre. Éviter 'tartre' (mot interdit, implique usure normale)."},
+      {q:"Paroi de douche : que vérifier en priorité ?",
+       opts:["La couleur de la paroi","L'étanchéité des joints paroi/bac + absence de trace de fuite","La marque du fabricant","La hauteur de la paroi"],
+       correct:1,
+       exp:"Un joint décollé paroi/bac = risque de dégât des eaux immédiat. Priorité absolue. Photo obligatoire si défaut constaté."}
+    ],
+    content: `
+      <div class="info-red">🔴 <strong>Zone à risque humidité</strong> — Joints, évacuations et VMC sont les 3 causes principales de litiges SDB. Photographier chaque défaut.</div>
+
+      <div class="section-bar">Joints silicone — Lecture rapide</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <div style="flex:1;background:#EBF8FF;border-radius:12px;padding:11px;text-align:center">
+          <div style="font-size:22px;margin-bottom:4px">⚪</div>
+          <div style="font-size:12px;font-weight:700;color:#38A169">Blanc</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Bon état</div>
+        </div>
+        <div style="flex:1;background:#FFFBEB;border-radius:12px;padding:11px;text-align:center">
+          <div style="font-size:22px;margin-bottom:4px">🟡</div>
+          <div style="font-size:12px;font-weight:700;color:#F59E0B">Jaune</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">État moyen</div>
+        </div>
+        <div style="flex:1;background:#FFFFFF;border-radius:12px;padding:11px;text-align:center">
+          <div style="font-size:22px;margin-bottom:4px">⚫</div>
+          <div style="font-size:12px;font-weight:700;color:var(--red)">Noir</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Mauvais + photo</div>
+        </div>
+      </div>
+      <div class="info-yellow">⚠️ Vérifier joints sur <strong>4 zones</strong> : tour baignoire/bac douche · paroi/mur · vasque/plan · meuble sous-vasque</div>
+
+      <div class="section-bar">Baignoire ou douche</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:4px">
+        ${[
+          {badge:'BAIG', accent:'#0D2B5E', color:'#EBF8FF', name:'Baignoire',
+           checks:['Email : état général (ébréchures, taches incrustées)','Joints périphériques : couleur + adhérence','Robinet mitigeur : chaud/froid OK · absence de fuite','Évacuation : bouchon + écoulement libre']},
+          {badge:'BACS', accent:'#0D2B5E', color:'#EBF8FF', name:'Bac de douche',
+           checks:['Bac : fissures, taches, état général (📷)','Paroi / cabine : joints paroi/bac + absence de fuite','Robinetterie : mitigeur + douchette fonctionnels','Évacuation : grille présente + écoulement libre']},
+          {badge:'ITD', accent:'#0D2B5E', color:'#EBF8FF', name:'Douche italienne',
+           checks:['Receveur encastré : joints périphériques (critique)','Paroi : étanchéité totale des joints','Caniveau : grille présente + écoulement libre','Siphon : odeurs ? → noter si présent']}
+        ].map(({badge,accent,color,name,checks})=>`
+          <div style="background:white;border-radius:12px;overflow:hidden;border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.08)">
+            <div style="background:${color};padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(0,0,0,.05)">
+              <span style="background:${accent};color:white;font-size:12px;font-weight:700;padding:4px 8px;border-radius:6px">${badge}</span>
+              <span style="font-size:14px;font-weight:700;color:var(--navy)">${name}</span>
+              <span style="margin-left:auto;background:var(--navy);color:#5BC8F5;font-size:12px;font-weight:700;padding:4px 8px;border-radius:6px;flex-shrink:0">PHOTO</span>
+            </div>
+            <div style="padding:8px 12px">
+              ${checks.map((c,i)=>`<div style="display:flex;align-items:flex-start;gap:8px;${i<checks.length-1?'margin-bottom:5px':''}">
+                <span style="min-width:16px;height:16px;background:${color};border:1.5px solid ${accent};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:${accent};flex-shrink:0;margin-top:1px">${i+1}</span>
+                <span style="font-size:12px;color:var(--text);line-height:1.4">${c}</span>
+              </div>`).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="section-bar">Robinetterie & plomberie</div>
+      <div class="card">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="border-bottom:1px solid var(--border);padding-bottom:8px">
+            <div style="font-weight:700;font-size:13px;color:var(--navy)">Mitigeur / robinets</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Tester eau froide + eau chaude · Absence de fuite au pied · Dépôts calcaires = état moyen</div>
+          </div>
+          <div style="border-bottom:1px solid var(--border);padding-bottom:8px">
+            <div style="font-weight:700;font-size:13px;color:var(--navy)">Meuble sous-vasque</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Toujours ouvrir · Traces humidité ? · Siphon intact ? · État des charnières</div>
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:13px;color:var(--navy)">WC (si dans la SDB)</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Chasse : fonctionne + arrêt complet · Abattant présent · Joints pied de cuvette</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-bar">VMC — Point critique</div>
+      <div style="background:#0D2B5E;border-radius:12px;padding:16px;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:700;color:#5BC8F5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Test VMC en 3 secondes</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${[
+            ['1','Approcher la main de la grille VMC'],
+            ['2','Vérifier la succion (papier fin qui colle = bon signe)'],
+            ['3','Observer la grille : propre / encrassée / bouchée ?']
+          ].map(([n,t])=>`<div style="display:flex;align-items:center;gap:8px">
+            <span style="min-width:22px;height:22px;background:#5BC8F5;color:var(--navy);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">${n}</span>
+            <span style="font-size:12px;color:rgba(255,255,255,.85)">${t}</span>
+          </div>`).join('')}
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+        <div style="background:#EBF8FF;border-radius:12px;padding:12px">
+          <div style="font-size:12px;font-weight:700;color:#38A169;margin-bottom:4px">BONNE FORMULATION</div>
+          <div style="font-size:12px;color:var(--text)">"VMC : succion vérifiée, grille propre"</div>
+        </div>
+        <div style="background:#FEF2F2;border-radius:12px;padding:12px">
+          <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px">A EVITER</div>
+          <div style="font-size:12px;color:var(--text)">"VMC fonctionnelle" sans vérification</div>
+        </div>
+      </div>
+      <div class="info-blue">💡 Grille très encrassée = mauvais état (obligation locataire). Grille bouchée = photo + noter dans commentaires.</div>
+
+      <div class="section-bar">Éclairage & divers</div>
+      <div class="card">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="border-bottom:1px solid var(--border);padding-bottom:8px">
+            <div style="font-weight:700;font-size:13px;color:var(--navy)">Spots / plafonnier</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Allumer · Compter ampoules présentes vs manquantes · Spots orientables : noter si cassés</div>
+          </div>
+          <div style="border-bottom:1px solid var(--border);padding-bottom:8px">
+            <div style="font-weight:700;font-size:13px;color:var(--navy)">Miroir</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Tain OK ? Fixations solides ? Éclairage intégré : tester</div>
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:13px;color:var(--navy)">Sèche-serviettes</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Allumer · S'allume + formule standard → "s'allume · fonctionnement complet non vérifiable"</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-bar">Quiz d'auto-évaluation</div>
+      <div id="module-quiz-7"></div>
+    `
+  },
+  {
+    id:8, emoji:'💬', color:'#EBF8FF', title:'Posture & communication',
+    sub:'Mots interdits · Phrases terrain',
+    desc:'Comment vous positionner en tant que tiers neutre et gérer les situations délicates.',
+    content: `
+      <div class="section-bar">Votre rôle</div>
+      <div class="card" style="background:var(--navy)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          ${[['📋','Neutre'],['📋','Factuel'],['🔍','Impartial'],['📄','Mandaté']].map(([e,l])=>`<div style="background:rgba(255,255,255,.1);border-radius:12px;padding:12px;text-align:center"><div style="font-size:22px;margin-bottom:4px">${e}</div><div style="font-size:12px;font-weight:700;color:white">${l}</div></div>`).join('')}
+        </div>
+      </div>
+      <div class="section-bar">Mots interdits</div>
+      <div class="words-forbidden">${['usure','usage','vétuste','ancien','vieux','tartre','abîmé par le temps'].map(w=>`<span class="word-tag">❌ ${w}</span>`).join('')}</div>
+      <div class="info-red">Ne jamais donner d'avis · commenter · interpréter. Votre rôle : constater et documenter.</div>
+      <div class="section-bar">Phrases terrain</div>
+      <div class="phrase-card arrival">
+        <div class="phrase-context">À dire à l'arrivée</div>
+        <div class="phrase-text">"Bonjour, je suis [nom], mandaté(e) par [agence] via Flatsy. Nous allons visiter pièce par pièce, décrire et photographier. Nous relirons ensemble avant signature."</div>
+      </div>
+      <div class="phrase-card">
+        <div class="phrase-context">Le locataire conteste</div>
+        <div class="phrase-text">"Je note ce que je constate. Vous pourrez faire vos observations dans le document avant de signer."</div>
+      </div>
+      <div class="phrase-card">
+        <div class="phrase-context">Le locataire demande votre avis</div>
+        <div class="phrase-text">"Mon rôle est de constater, pas d'évaluer. L'agence prendra les décisions."</div>
+      </div>
+      <div class="phrase-card refus">
+        <div class="phrase-context">Refus de signature</div>
+        <div class="phrase-text">"Sans signature, je dois mettre fin a la mission. L'agence pourra appeler un huissier."</div>
+      </div>
+      <div class="section-bar">Plus de phrases terrain</div>
+      <div class="phrase-card">
+        <div class="phrase-context">Le locataire dit "c'est la faute du propriétaire"</div>
+        <div class="phrase-text">"Je note ce que je constate. Les decisions de retenue ou de reparation appartiennent à l'agence et au propriétaire."</div>
+      </div>
+      <div class="phrase-card">
+        <div class="phrase-context">Le locataire veut modifier votre description</div>
+        <div class="phrase-text">"Vous pouvez ajouter vos observations dans le champ reserve aux remarques du locataire avant de signer."</div>
+      </div>
+      <div class="phrase-card">
+        <div class="phrase-context">Logement dans un etat tres sale</div>
+        <div class="phrase-text">"Je dois tout noter et photographier pour proteger les deux parties. C'est dans votre interet aussi."</div>
+      </div>
+      <div class="phrase-card">
+        <div class="phrase-context">Le locataire est nerveux ou hostile</div>
+        <div class="phrase-text">"Je comprends que c'est une situation stressante. Mon role est de faire un constat neutre — je ne prends pas de parti."</div>
+      </div>
+      <div class="info-blue">💡 Ton = calme, professionnel, factuel. Ni complice du locataire, ni allie du propriétaire.</div>
+      <div class="section-bar">Quiz d'auto-évaluation</div>
+      <div id="module-quiz-8"></div>
+    `,
+    quiz:[
+      {q:"Si le locataire demande votre avis sur un défaut, vous répondez :",
+       opts:["Oui c'est assez abime","Ce n'est pas grave","Mon role est de constater, pas d'evaluer","Vous avez raison c'est use"],
+       correct:2,
+       exp:"L'agent constate et documente, il ne juge pas. Toute opinion peut être retournée contre l'agence lors d'un litige."},
+      {q:"Lequel de ces mots est INTERDIT dans la rédaction d'un EDL ?",
+       opts:["fissure","décollé","tartre","écaillé"],
+       correct:2,
+       exp:"'Tartre' implique usure normale = vétusté (charge proprio). Sont aussi interdits : usure, usage, vétusté, ancien, vieux, abime par le temps."},
+      {q:"Si le locataire refuse de signer, que faire ?",
+       opts:["Insister jusqu'a obtenir la signature","Mettre fin a la mission et informer Flatsy immédiatement","Signer l'EDL seul","Partir sans noter"],
+       correct:1,
+       exp:"Mission terminée, locataire garde les cles, Flatsy informé immédiatement. Un huissier peut etre mandate (frais partages 50/50)."}
+    ]
+  },
+  {
+    id:9, emoji:'⚠️', color:'#FFFBEB', title:'Cas particuliers',
+    sub:'Locataire absent · Refus · Imprévus',
+    desc:'Les situations inhabituelles et comment les gérer sans improviser.',
+    content: `
+      <div class="section-bar">Locataire absent</div>
+      <div class="card" style="border-left:4px solid var(--red);border-radius:0 12px 12px 0">
+        <div class="step-list">
+          <div class="step-item"><div class="step-num" style="background:var(--red)">1</div><div class="step-text">Attendre 30 minutes sur place</div></div>
+          <div class="step-item"><div class="step-num" style="background:var(--red)">2</div><div class="step-text">📷 Photo preuve de présence</div></div>
+          <div class="step-item"><div class="step-num" style="background:var(--red)">3</div><div class="step-text">💬 Prévenir Flatsy via le chat</div></div>
+        </div>
+      </div>
+      <div class="section-bar">Refus de signature</div>
+      <div class="card" style="border-left:4px solid var(--navy);border-radius:0 12px 12px 0">
+        <div class="step-list">
+          <div class="step-item"><div class="step-num">1</div><div class="step-text">Mettre fin à la mission</div></div>
+          <div class="step-item"><div class="step-num">2</div><div class="step-text">🔑 Le locataire garde les clés</div></div>
+          <div class="step-item"><div class="step-num">3</div><div class="step-text">💬 Informer immédiatement Flatsy</div></div>
+        </div>
+        <div class="info-blue" style="margin-top:10px;margin-bottom:0">Sans signature → aucune retenue possible. L'agence peut faire appel à un huissier (frais partagés).</div>
+      </div>
+      <div class="section-bar">Électricité coupée</div>
+      <div class="card">
+        <div style="font-size:13px;color:var(--text);line-height:1.6">Mentionner sur le constat · Préciser les équipements non testables · Ne pas inventer d'état</div>
+      </div>
+      <div class="section-bar">Logement sale ou dangereux</div>
+      <div class="card">
+        <div style="display:flex;flex-wrap:wrap;gap:8px"><span style="background:#FEF2F2;color:var(--red);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600">Décrire précisément</span><span style="background:#FEF2F2;color:var(--red);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600">📷 Photographier</span><span style="background:#FEF2F2;color:var(--red);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600">💬 Informer Flatsy</span></div>
+      </div>
+      <div class="section-bar">Annexes & meublé</div>
+      <div class="card">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:#F7F9FC;border-radius:12px;padding:8px 12px"><div style="font-size:12px;font-weight:700;color:var(--navy)">Annexes inaccessibles</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Écrire "inaccessible" + raison dans commentaire Nockee</div></div>
+          <div style="background:#EBF8FF;border-radius:12px;padding:8px 12px"><div style="font-size:12px;font-weight:700;color:var(--navy)">Logement meublé</div><div style="font-size:12px;color:var(--navy);margin-top:2px">2 pieces Nockee : EDL + Inventaire séparé — les deux doivent être signés</div></div>
+        </div>
+      </div>
+      <div class="section-bar">Quiz d'auto-évaluation</div>
+      <div id="module-quiz-9"></div>
+    `,
+    quiz:[
+      {q:"Que faire si le locataire n'est pas présent à l'heure prévue ?",
+       opts:["Repartir immédiatement","Attendre 30 min, photo preuve, prévenir Flatsy","Commencer l'EDL seul","Appeler directement le propriétaire"],
+       correct:1,
+       exp:"Protocole : attendre 30 minutes, photo preuve de présence, puis contacter Flatsy via le chat. Ne jamais commencer un EDL seul sans le locataire."},
+      {q:"Si l'électricité est coupée lors de l'EDL, que noter dans Nockee ?",
+       opts:["Rien du tout","Tout en mauvais etat par precaution","Électricité coupée, équipements non testables lors de l'EDL","Annuler l'EDL"],
+       correct:2,
+       exp:"On note les équipements non testables avec la raison (électricité coupee). Ne pas fabriquer d'etat qu'on ne peut pas constater."},
+      {q:"Pour un logement meublé, combien de documents Nockee faut-il produire ?",
+       opts:["1 seul : l'EDL suffit","2 : l'EDL ET l'inventaire du mobilier (tous deux signés)","3 : EDL, inventaire et liste électroménager","L'inventaire seul"],
+       correct:1,
+       exp:"Logement meublé = 2 documents distincts dans Nockee : l'EDL (etat) ET l'inventaire du mobilier. Les deux doivent être signés séparément."}
+    ]
+  },
+  {
+    id:10, emoji:'📐', color:'#EBF8FF', title:'Vétusté & dépôt de garantie',
+    sub:'Grille UNPI-CNL · Calcul · Restitution',
+    desc:'Comprendre la vétusté pour ne pas confondre dégradation et usure normale.',
+    content: `
+      <div class="section-bar">Vétusté vs Dégradation</div>
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;color:var(--navy);line-height:1.6;margin-bottom:10px">La vétusté = usure normale du temps. Même bien entretenu, un logement vieillit. Cette usure est à la charge du <strong>propriétaire</strong>.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="background:#FEF2F2;border-radius:12px;padding:12px"><div style="font-size:12px;font-weight:700;color:var(--red);text-transform:uppercase;margin-bottom:5px">Dégradation (locataire)</div><div style="font-size:12px;color:var(--muted);line-height:1.4">Trou dans mur · Vitre cassée · Tache incrustée · Brûlure plan de travail</div></div>
+          <div style="background:#EBF8FF;border-radius:12px;padding:12px"><div style="font-size:12px;font-weight:700;color:#38A169;text-transform:uppercase;margin-bottom:5px">Vétusté (proprio)</div><div style="font-size:12px;color:var(--muted);line-height:1.4">Peinture jaunie · Moquette vieillie · Joints qui sèchent · Robinetterie ancienne</div></div>
+        </div>
+      </div>
+      <div class="section-bar">Grille UNPI-CNL (indicative)</div>
+      <div class="info-yellow">⚠️ Ces durées n'ont pas de valeur légale contraignante. Elles servent de base de négociation.</div>
+      <table class="ref-table">
+        <thead><tr><th>Élément</th><th>Durée indicative</th></tr></thead>
+        <tbody>
+          ${[['Peintures / papiers peints','7 ans'],['Moquettes, sols souples','7 ans'],['Stores','8 ans'],['Lave-linge','8 ans'],['Mécanisme WC','10 ans'],['Réfrigérateur','10 ans'],['Lave-vaisselle','10 ans'],['Chauffe-eau','10 ans'],['Robinetterie','15 ans'],['Fenêtres simple vitrage','15 ans'],['Cuisine équipée','15 ans'],['Chaudière','15 ans'],['Radiateurs électriques','15 ans'],['Serrures','15 ans'],['Fenêtres double vitrage','20 ans'],['Portes intérieures','20 ans'],['Volets','20 ans'],['Parquet','25 ans'],['Carrelage','25 ans']].map(([e,d])=>`<tr><td>${e}</td><td><strong>${d}</strong></td></tr>`).join('')}
+        </tbody>
+      </table>
+
+      <div class="section-bar">Dépôt de garantie — délais de restitution</div>
+      <div class="card">
+        <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px">L'EDL de sortie déclenche directement le délai de restitution du dépôt de garantie. Voici ce que l'agent doit savoir.</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:#EBF8FF;border-radius:12px;padding:12px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="background:#38A169;color:white;font-size:16px;font-weight:700;border-radius:8px;padding:6px 12px;min-width:60px;text-align:center">1 mois</div>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:#38A169">EDL conforme — aucune dégradation</div>
+                <div style="font-size:12px;color:var(--muted);margin-top:2px">Délai à compter de la remise des clés. Un EDL précis protège le locataire.</div>
+              </div>
+            </div>
+          </div>
+          <div style="background:#FFFBEB;border-radius:12px;padding:12px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="background:#F59E0B;color:white;font-size:16px;font-weight:700;border-radius:8px;padding:6px 12px;min-width:60px;text-align:center">2 mois</div>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:#F59E0B">EDL non conforme — dégradations constatées</div>
+                <div style="font-size:12px;color:var(--muted);margin-top:2px">Le bailleur peut retenir jusqu'à 20% pour les charges en copropriété (arrêté annuel).</div>
+              </div>
+            </div>
+          </div>
+          <div style="background:#FEF2F2;border-radius:12px;padding:12px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="background:#E53E3E;color:white;font-size:12px;font-weight:700;border-radius:8px;padding:6px 10px;min-width:60px;text-align:center">+10%/mois</div>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:#E53E3E">Pénalité de retard automatique</div>
+                <div style="font-size:12px;color:var(--muted);margin-top:2px">+10% du loyer mensuel hors charges par mois de retard. Non due si le locataire n'a pas donné sa nouvelle adresse.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:10px;background:#F7F9FC;border-radius:8px;padding:12px;font-size:12px;color:var(--text)"><strong>Rôle de l'agent :</strong> un EDL précis et signé = preuve solide pour le bailleur. Un EDL ambigu = litige prévisible. La qualité de la description à la sortie est directement liée aux retenues possibles.</div>
+      </div>
+
+      <div class="section-bar">Réparations locatives — décret 87-712 simplifié</div>
+      <div class="card">
+        <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px">Ce décret de 1987 liste les réparations à la charge du locataire. Distinction essentielle avec la vétusté.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="background:#EBF8FF;border-radius:12px;padding:12px">
+            <div style="font-size:12px;font-weight:700;color:#38A169;text-transform:uppercase;margin-bottom:8px">Charge locataire (entretien)</div>
+            ${["Joints de robinets","Mécanisme chasse d'eau","Ampoules + fusibles","Filtre VMC","Contrat entretien chaudière","Ramonage conduit","Petits trous cheville","Vitre cassée accident.","Serrure (usage normal)"].map(x=>`<div style="font-size:12px;color:#38A169;margin-bottom:4px;line-height:1.3">✓ ${x}</div>`).join('')}
+          </div>
+          <div style="background:#FEF2F2;border-radius:12px;padding:12px">
+            <div style="font-size:12px;font-weight:700;color:#E53E3E;text-transform:uppercase;margin-bottom:8px">Charge propriétaire (bâti)</div>
+            ${["Remplacement chaudière","Robinetterie vétuste","Porte / fenêtre","Électricité structurelle","Canalisation (vétusté)","Toiture / façade","Serrure vétuste","Moisissures structurelles","Isolation thermique"].map(x=>`<div style="font-size:12px;color:#E53E3E;margin-bottom:4px;line-height:1.3">✗ ${x}</div>`).join('')}
+          </div>
+        </div>
+        <div style="background:#FFFBEB;border-radius:8px;padding:12px;margin-top:8px;font-size:12px;color:#F59E0B">⚠️ <strong>Règle d'or :</strong> si le manquement d'entretien vient de la <em>vétusté</em> et non du comportement du locataire, c'est au propriétaire — même si c'est techniquement dans la liste décret 87-712.</div>
+      </div>
+      <div class="section-bar">Quiz d'auto-évaluation</div>
+      <div id="module-quiz-10"></div>
+    `,
+    quiz:[
+      {q:"Durée de vétusté indicative des peintures selon la grille UNPI-CNL ?",
+       opts:["3 ans","5 ans","7 ans","10 ans"],
+       correct:2,
+       exp:"Peintures et papiers peints : 7 ans selon la grille UNPI-CNL. Passé ce delai, le propriétaire ne peut retenir aucun frais de remise en peinture."},
+      {q:"Un trou dans le mur laissé par le locataire est :",
+       opts:["De la vétusté (charge proprio)","Une dégradation (charge locataire)","Normal après plusieurs annees","A charge partagee 50/50"],
+       correct:1,
+       exp:"Un trou dans le mur = dégradation imputable au locataire. A distinguer d'une fissure structurelle de vieillissement (vétusté, charge propriétaire)."},
+      {q:"La grille UNPI-CNL est :",
+       opts:["Obligatoire et légalement contraignante","Indicative — base de négociation, sans valeur légale contraignante","Fixee par decret tous les 5 ans","Specifique a chaque region de France"],
+       correct:1,
+       exp:"La grille UNPI-CNL n'a pas de valeur légale contraignante. Elle sert de référence admise par les tribunaux mais peut etre discutee lors de litiges."}
+    ]
+  },
+  {
+    id:11, emoji:'🚪', color:'#EBF8FF', title:'EDL de sortie',
+    sub:'Comparaison · Meublé · Restitution clés',
+    desc:'Ce qui change entre une entrée et une sortie, et comment bien les comparer.',
+    content: `
+      <div class="section-bar">EDL sortie vs EDL entrée — ce qui change</div>
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px">La sortie n'est pas une visite indépendante — c'est une <em>comparaison</em></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="background:#EBF8FF;border-radius:12px;padding:12px">
+            <div style="font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:5px">EDL Entrée</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.5">Décrit l'état initial · Sert de référence pour toute la durée du bail · Document de départ</div>
+          </div>
+          <div style="background:#EBF8FF;border-radius:12px;padding:12px">
+            <div style="font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:5px">EDL Sortie</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.5">Compare l'état actuel à l'entrée · Identifie ce qui a changé · Déclenche ou non les retenues</div>
+          </div>
+        </div>
+      </div>
+      <div class="info-yellow">📋 Obligation légale : l'EDL de sortie doit <strong>permettre la comparaison</strong> avec l'EDL d'entrée (décret 2016-382). Dans Nockee, l'EDL d'entrée doit être accessible pendant la visite de sortie.</div>
+
+      <div class="section-bar">Avant d'arriver — préparer la comparaison</div>
+      <div class="card">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${[
+            ["1","Récupérer l'EDL d'entrée dans Nockee","Lire chaque pièce AVANT la visite — noter ce qui était déjà dégradé à l'entrée"],
+            ["2","Photographier les mêmes angles","Reprendre les mêmes cadrages que l'entrée pour faciliter la comparaison"],
+            ["3","Prévoir plus de temps","Une sortie prend 20-30% de plus qu'une entrée — la comparaison demande de la rigueur"],
+            ["4","Vérifier les clés attendues","Combien de clés avaient été remises à l'entrée ? C'est ce qu'on attend à la sortie"]
+          ].map(([n,t,d])=>`<div style="display:flex;gap:8px;align-items:flex-start">
+            <span style="background:var(--navy);color:#5BC8F5;font-weight:700;font-size:12px;min-width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">${n}</span>
+            <div><div style="font-size:13px;font-weight:700;color:var(--navy)">${t}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${d}</div></div>
+          </div>`).join('')}
+        </div>
+      </div>
+
+      <div class="section-bar">Pièce par pièce — la méthode de comparaison</div>
+      <div class="card">
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px">Pour chaque élément (sol, mur, plafond, équipement) :</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:#EBF8FF;border-radius:8px;padding:12px">
+            <div style="font-size:12px;font-weight:700;color:#38A169;margin-bottom:4px">Si identique à l'entrée</div>
+            <div style="font-size:12px;color:var(--muted)">Reprendre la même description. Ex : "Carrelage 60×60 — bon état, identique à l'entrée"</div>
+          </div>
+          <div style="background:#FFFBEB;border-radius:8px;padding:12px">
+            <div style="font-size:12px;font-weight:700;color:#F59E0B;margin-bottom:4px">Si légèrement différent (vétusté possible)</div>
+            <div style="font-size:12px;color:var(--muted)">Décrire précisément + comparer avec l'entrée. Ex : "Peinture jaunie — était 'blanc, bon état' à l'entrée. Usure de 4 ans."</div>
+          </div>
+          <div style="background:#FEF2F2;border-radius:8px;padding:12px">
+            <div style="font-size:12px;font-weight:700;color:#E53E3E;margin-bottom:4px">Si dégradation constatée</div>
+            <div style="font-size:12px;color:var(--muted)">Décrire + comparer + photographier. Ex : "Trou 3 cm dans le mur — absent à l'entrée. Photo 23."</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-bar">Vétusté vs Dégradation — la question clé de la sortie</div>
+      <div class="card">
+        <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px">À la sortie, pour chaque différence constatée, la vraie question est :</div>
+        <div style="background:#0D2B5E;border-radius:12px;padding:12px;text-align:center;margin-bottom:10px">
+          <div style="font-size:14px;font-weight:700;color:#5BC8F5;margin-bottom:6px">"Est-ce que ça aurait vieilli même si le locataire avait bien entretenu le logement ?"</div>
+          <div style="font-size:12px;color:var(--muted)">OUI = vétusté (propriétaire) · NON = dégradation (locataire)</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="background:#EBF8FF;border-radius:12px;padding:12px">
+            <div style="font-size:12px;font-weight:700;color:#38A169;text-transform:uppercase;margin-bottom:5px">Vétusté → proprio</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.5">Peinture jaunie après 5+ ans · Moquette usée · Joints qui sèchent naturellement · Parquet terne</div>
+          </div>
+          <div style="background:#FEF2F2;border-radius:12px;padding:12px">
+            <div style="font-size:12px;font-weight:700;color:#E53E3E;text-transform:uppercase;margin-bottom:5px">Dégradation → locataire</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.5">Trou dans le mur · Vitre cassée · Brûlure plan de travail · Tache incrustée · Carrelage fissuré</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-bar">Restitution des clés — protocole sortie</div>
+      <div class="card">
+        <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px">La restitution des clés marque officiellement la fin du bail. C'est le moment critique.</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${[
+            ["Comparer avec l'entrée","Compter le même nombre de clés que celles remises à l'entrée (clé appart + boîte + immeuble + cave + parking)"],
+            ["Tester chaque clé","Vérifier que chaque clé ouvre bien ce qu'elle est censée ouvrir"],
+            ["Photographier","Photo des clés restituées devant le locataire — même procédure qu'à l'entrée"],
+            ["Clé manquante","Annoter dans Nockee : 'Clé [X] non restituée'. Le bailleur pourra retenir le coût cylindre si notée à l'entrée"],
+            ["Signature = fin de mission","Une fois les clés remises et l'EDL signé, la mission est close. Le locataire n'a plus accès au logement"]
+          ].map(([t,d])=>`<div style="background:#F7F9FC;border-radius:8px;padding:12px">
+            <div style="font-size:12px;font-weight:700;color:var(--navy)">${t}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:3px">${d}</div>
+          </div>`).join('')}
+        </div>
+      </div>
+
+      <div class="section-bar">Meublé — l'inventaire à la sortie</div>
+      <div class="card">
+        <div style="background:#0D2B5E;border-radius:12px;padding:12px;margin-bottom:10px">
+          <div style="font-size:12px;font-weight:700;color:white;margin-bottom:4px">2 documents distincts dans Nockee pour un meublé</div>
+          <div style="font-size:12px;color:#5BC8F5">L'EDL (état des surfaces) + l'Inventaire du mobilier. Les deux doivent être complétés et signés séparément.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${[
+            ["Nombre de meubles","Tous les meubles listés à l'entrée doivent être présents"],
+            ["État des meubles","Comparer avec la description à l'entrée — noter l'usure ou les dégradations"],
+            ["Électroménager","Tester chaque appareil comme à l'entrée"],
+            ["Literie et textiles","Présents ? Même état ? (housses, couvertures si listées)"],
+            ["Manquants","Un meuble absent = dégradation imputable au locataire si listé à l'entrée"]
+          ].map(([k,v])=>`<div style="display:flex;gap:8px;background:#EBF8FF;border-radius:8px;padding:8px 8px">
+            <span style="font-size:12px;font-weight:700;color:var(--navy);min-width:120px">${k}</span>
+            <span style="font-size:12px;color:var(--muted)">${v}</span>
+          </div>`).join('')}
+        </div>
+      </div>
+
+      <div class="section-bar">Quiz d'auto-évaluation</div>
+      <div id="module-quiz-11"></div>
+    `,
+    quiz:[
+      {q:"L'EDL de sortie doit obligatoirement :",
+       opts:["Être réalisé par le même agent que l'entrée","Permettre la comparaison avec l'EDL d'entrée","Être plus détaillé que l'EDL d'entrée","Être établi par un commissaire de justice"],
+       correct:1,
+       exp:"Le décret 2016-382 impose que l'EDL de sortie permette la comparaison avec l'EDL d'entrée. C'est son objectif principal — identifier ce qui a changé."},
+      {q:"Un locataire rend 1 clé au lieu de 2 à la sortie. Le bailleur peut retenir le coût du cylindre seulement si :",
+       opts:["Il a un témoin","Les 2 clés étaient notées dans l'EDL d'entrée","Le locataire a signé","Il y a une photo des clés à la sortie"],
+       correct:1,
+       exp:"La retenue n'est possible que si la clé manquante était mentionnée dans l'EDL d'entrée. Sans mention à l'entrée, pas de preuve qu'elle existait."},
+      {q:"Pour un meublé, l'inventaire du mobilier est :",
+       opts:["Optionnel si l'EDL est bien détaillé","Intégré dans l'EDL comme une section supplémentaire","Un document distinct de l'EDL — obligatoire et signé séparément","À faire seulement à la sortie"]
+       ,correct:2,
+       exp:"Logement meublé = 2 documents distincts dans Nockee : l'EDL (état des surfaces) ET l'inventaire du mobilier. Les deux doivent être signés séparément."}
+    ]
+  },
+];
+
+const FICHES = [
+  {
+    id:'methode', emoji:'📍', name:'Méthode de visite', desc:'Ordre & réflexes',
+    cat:'terrain',
+    content:`
+      <div class="section-bar">Ordre de visite</div>
+      <div class="card">
+        <div style="display:flex;flex-direction:column;gap:8px"><div style="background:#0D2B5E;border-radius:12px;padding:12px 16px;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:700;color:#5BC8F5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🔴 Toujours en premier</div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;background:rgba(0,191,234,.15);border:1.5px solid #5BC8F5;border-radius:12px;padding:12px;text-align:center">
+            <div style="font-size:18px;margin-bottom:3px">🗝️</div>
+            <div style="font-size:12px;font-weight:700;color:white">1. Annexes</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:1px">Cave · Parking</div>
+          </div>
+          <div style="flex:1;background:rgba(0,191,234,.15);border:1.5px solid #5BC8F5;border-radius:12px;padding:12px;text-align:center">
+            <div style="font-size:18px;margin-bottom:3px">🔢</div>
+            <div style="font-size:12px;font-weight:700;color:white">2. Compteurs</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:1px">Eau · Élec · Gaz</div>
+          </div>
+        </div>
+      </div>
+      ${['3. Entrée & porte palière','4. Séjour / Salon','5. Cuisine (avec électroménager)','6. Chambres (nommer par position)','7. Couloir & rangements','8. Salle de bain','9. WC','10. Relecture avec le locataire','11. Signature'].map((s,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="min-width:22px;height:22px;background:var(--flatsy);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">${i+3}</span><span style="font-size:13px;font-weight:500;color:var(--text)">${s.slice(3)}</span></div>`).join('')}</div>
+      </div>
+      <div class="info-yellow">⚠️ Nommer les chambres par position : <strong>Chambre côté rue</strong>, <strong>Chambre fond couloir</strong></div>
+      <div class="section-bar">Pour chaque pièce</div>
+      <div class="card">
+        <div style="display:flex;flex-wrap:wrap;gap:8px">${['Sol (matériau + état)','4 murs (matériau + état)','Plafond','Porte(s)','Fenêtre(s)','Volet(s)','Équipements spécifiques','Photos de chaque défaut'].map(t=>`<span style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--text)">${t}</span>`).join('')}</div>
+      </div>
+    `
+  },
+  {
+    id:'nockee', emoji:'📊', name:'Échelle Nockee', desc:'4 états · formulations',
+    cat:'terrain',
+    content:`
+      <div class="section-bar">Les 4 états</div>
+      <div class="scale-row">
+        <div class="scale-item neuf"><div class="scale-name">Neuf</div><div class="scale-def">Jamais utilisé</div></div>
+        <div class="scale-item bon"><div class="scale-name">Bon</div><div class="scale-def">Propre & fonctionnel</div></div>
+      </div>
+      <div class="scale-row">
+        <div class="scale-item moyen"><div class="scale-name">Moyen</div><div class="scale-def">Défauts légers, non fonctionnels</div></div>
+        <div class="scale-item mauvais"><div class="scale-name">Mauvais</div><div class="scale-def">Abîmé, sale ou non fonctionnel</div></div>
+      </div>
+      <div class="section-bar">Mots interdits</div>
+      <div class="words-forbidden">${['usure','usage','vétuste','ancien','vieux','tartre','abîmé par le temps','usure normale'].map(w=>`<span class="word-tag">❌ ${w}</span>`).join('')}</div>
+      <div class="info-yellow">⚠️ Ne jamais écrire « abîmé par le temps » ni « usure normale » — ces termes qualifient la vétusté (charge du propriétaire).</div>
+    `
+  },
+  {
+    id:'revetements', emoji:'📐', name:'Revêtements', desc:'Sols · Murs · Plafonds',
+    cat:'terrain',
+    content:`
+      <div class="section-bar">Sols</div>
+      <div class="card">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">${['Parquet','Carrelage','Moquette','PVC / Vinyle','Béton ciré','Tomette','Marbre'].map(t=>`<span style="background:#E8ECF2;color:var(--navy);font-size:12px;font-weight:600;padding:4px 8px;border-radius:20px">${t}</span>`).join('')}</div>
+        <div class="state-row good"><div class="state-label good">Bon</div><div class="state-text">« Parquet contrecollé, bon état général, légères rayures de surface »</div></div>
+        <div class="state-row medium"><div class="state-label medium">Moyen</div><div class="state-text">« Carrelage 60×60, 2 carreaux fissurés au centre »</div></div>
+        <div class="state-row bad"><div class="state-label bad">Mauvais</div><div class="state-text">« PVC vinyle, déchirure 20 cm près de la baie, bord décollé 40 cm »</div></div>
+      </div>
+      <div class="section-bar">Murs</div>
+      <div class="card">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">${['Peinture','Papier peint','Faïence','Enduit lisse','Crépi'].map(t=>`<span style="background:#E8ECF2;color:var(--navy);font-size:12px;font-weight:600;padding:4px 8px;border-radius:20px">${t}</span>`).join('')}</div>
+        <div class="state-row good"><div class="state-label good">Bon</div><div class="state-text">« Peinture blanche, légères marques de frottement, couleur uniforme »</div></div>
+        <div class="state-row medium"><div class="state-label medium">Moyen</div><div class="state-text">« Papier peint décollé angle haut gauche fenêtre, ~10 cm »</div></div>
+        <div class="state-row bad"><div class="state-label bad">Mauvais</div><div class="state-text">« Enduit : fissure traversante 30 cm, auréole humidité 40 cm »</div></div>
+      </div>
+    `
+  },
+  {
+    id:'menuiseries', emoji:'🚪', name:'Menuiseries', desc:'Portes · Fenêtres · Volets',
+    cat:'terrain',
+    content:`
+      <div class="info-blue">Tester <strong>physiquement</strong> chaque ouvrant. Un volet bloqué, une serrure qui résiste : tout se documente avec photo + état noté.</div>
+      <div class="section-bar">Portes intérieures</div>
+      <div class="card">
+        <div class="state-row good"><div class="state-label good">Bon</div><div class="state-text">« Porte SDB, ferme normalement, serrure loquet fonctionnelle »</div></div>
+        <div class="state-row bad"><div class="state-label bad">Mauvais</div><div class="state-text">« Battant coincé — impossible à fermer, encadrement déformé »</div></div>
+      </div>
+      <div class="info-red">🔴 <strong>Porte palière CRITIQUE</strong> : Serrure multipoints, joint d'étanchéité, fermeture complète. Photo obligatoire si défaut.</div>
+      <div class="section-bar">Fenêtres</div>
+      <div class="card">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">${['Simple vitrage','Double vitrage','Oscillo-battant','Coulissante'].map(t=>`<span style="background:#E8ECF2;color:var(--navy);font-size:12px;font-weight:600;padding:4px 8px;border-radius:20px">${t}</span>`).join('')}</div>
+        <div class="info-yellow" style="margin-bottom:0">⚠️ Oscillo-battant : tester les <strong>DEUX positions</strong> (bascule ET rotation)</div>
+      </div>
+    `
+  },
+  {
+    id:'plomberie', emoji:'💧', name:'Plomberie', desc:'Joints · Robinetterie · Évacuations',
+    cat:'terrain',
+    content:`
+      <div class="section-bar">Joints sanitaires</div>
+      <div class="card">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:#EBF8FF;border-radius:12px;padding:8px 12px;font-size:13px;font-weight:600;color:var(--navy)">⬜ Blanc = bon état</div>
+          <div style="background:#FFFBEB;border-radius:12px;padding:8px 12px;font-size:13px;font-weight:600;color:var(--amber)">🟡 Jaune / teinté = état moyen</div>
+          <div style="background:#FEF2F2;border-radius:12px;padding:8px 12px;font-size:13px;font-weight:600;color:var(--red)">⬛ Noir / moisissures = mauvais état</div>
+        </div>
+      </div>
+      <div class="section-bar">Robinetterie</div>
+      <div class="card">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:13px;color:var(--text)">✅ Tester chaud ET froid</div>
+          <div style="font-size:13px;color:var(--text)">✅ Vérifier absence de fuite sous pression</div>
+          <div style="font-size:13px;color:var(--text)">✅ Ouvrir meublé sous évier (fuites cachées)</div>
+          <div style="font-size:13px;color:var(--text)">✅ Noter calcaire visible sur robinets</div>
+        </div>
+      </div>
+    `
+  },
+  {
+    id:'electr', emoji:'⚡', name:'Électricité', desc:'Compteur · Prises · Disjoncteurs',
+    cat:'terrain',
+    content:`
+      <div class="section-bar">Compteur Linky</div>
+      <div class="card">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div><div style="font-weight:700;font-size:13px;color:var(--navy)">PRM</div><div style="font-size:12px;color:var(--muted);margin-top:2px">14 chiffres — à relever et photographier</div></div>
+          <div><div style="font-weight:700;font-size:13px;color:var(--navy)">Index</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Relever <strong>1 seul index</strong> pour un Linky · Photo obligatoire</div></div>
+        </div>
+      </div>
+      <div class="section-bar">Prises & interrupteurs</div>
+      <div class="card">
+        <div style="font-size:13px;color:var(--text);line-height:1.6">Tester chaque prise visible · noter "déboîtée", "absente" ou "non fonctionnelle" le cas échéant · Vérifier présence plaques</div>
+      </div>
+    `
+  },
+  {
+    id:'compteurs', emoji:'🔢', name:'Compteurs', desc:'Eau · Élec · Gaz · Mémo rapide',
+    cat:'terrain',
+    content:`
+      <div style="background:#0D2B5E;border-radius:12px;padding:12px 16px;margin-bottom:14px">
+        <div style="font-size:12px;font-weight:700;color:#E53E3E;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">⚠️ SUJET N°1 DE LITIGE</div>
+        <div style="font-size:13px;font-weight:700;color:white;line-height:1.4">Index manquant ou illisible = litige garanti</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:4px">Photo de chaque compteur AVANT de monter dans le logement</div>
+      </div>
+      <div class="section-bar">Quoi relever pour chaque compteur</div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <span style="font-size:18px">⚡</span>
+          <div style="font-size:14px;font-weight:700;color:var(--navy)">Électricité — Linky</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+          <div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:12px;font-weight:700;color:var(--navy);min-width:70px">Numéro</span><span style="font-size:12px;color:var(--muted)">PRM = identifiant du compteur</span></div>
+          <div style="background:var(--bg);border-radius:8px;padding:6px 10px;font-family:monospace;font-size:14px;font-weight:700;color:var(--navy);letter-spacing:1px">09 123 456 789 012 <span style="font-family:inherit;font-size:11px;font-weight:400;color:var(--muted);letter-spacing:0">(14 chiffres)</span></div>
+          <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px"><span style="font-size:12px;font-weight:700;color:var(--navy);min-width:70px">Index</span><span style="font-size:12px;color:var(--muted)">1 seul chiffre à noter</span></div>
+          <div style="background:var(--bg);border-radius:8px;padding:6px 10px;font-family:monospace;font-size:14px;font-weight:700;color:var(--navy);letter-spacing:1px">12 345 kWh</div>
+        </div>
+        <div style="background:#FEF2F2;border-radius:8px;padding:8px 10px;font-size:12px;color:#E53E3E;line-height:1.4"><strong>Piège :</strong> l'écran de veille ne montre PAS l'index. Appuyer sur le bouton + avant la photo.</div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <span style="font-size:18px">💧</span>
+          <div style="font-size:14px;font-weight:700;color:var(--navy)">Eau froide</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:12px;font-weight:700;color:var(--navy);min-width:70px">Numéro</span><span style="font-size:12px;color:var(--muted)">Gravé sur la façade du compteur</span></div>
+          <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px"><span style="font-size:12px;font-weight:700;color:var(--navy);min-width:70px">Index</span><span style="font-size:12px;color:var(--muted)">En m³ — chiffres noirs uniquement (pas les rouges)</span></div>
+          <div style="background:var(--bg);border-radius:8px;padding:6px 10px;font-family:monospace;font-size:14px;font-weight:700;color:var(--navy);letter-spacing:1px">234 m³</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <span style="font-size:18px">🔥</span>
+          <div style="font-size:14px;font-weight:700;color:var(--navy)">Eau chaude</div>
+          <span style="font-size:11px;color:var(--muted);font-weight:400">— seulement si chauffage collectif</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5">Même procédure que eau froide : numéro + index en m³ + photo.</div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <span style="font-size:18px">🔥</span>
+          <div style="font-size:14px;font-weight:700;color:var(--navy)">Gaz</div>
+          <span style="font-size:11px;color:var(--muted);font-weight:400">— souvent en cave</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:12px;font-weight:700;color:var(--navy);min-width:70px">Numéro</span><span style="font-size:12px;color:var(--muted)">PCE = Point de Comptage Estimation</span></div>
+          <div style="background:var(--bg);border-radius:8px;padding:6px 10px;font-family:monospace;font-size:14px;font-weight:700;color:var(--navy);letter-spacing:1px">GI 123456</div>
+          <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px"><span style="font-size:12px;font-weight:700;color:var(--navy);min-width:70px">Index</span><span style="font-size:12px;color:var(--muted)">En m³</span></div>
+          <div style="background:var(--bg);border-radius:8px;padding:6px 10px;font-family:monospace;font-size:14px;font-weight:700;color:var(--navy);letter-spacing:1px">5 678 m³</div>
+        </div>
+      </div>
+      <div class="info-red" style="margin-top:14px">⛔ <strong>Compteur inaccessible ?</strong> Écrire dans Nockee : "non accessible — [raison]". Ne JAMAIS laisser le champ vide.</div>
+    `
+  },
+  {
+    id:'chauffage', emoji:'🔥', name:'Chauffage', desc:'Radiateurs · Chaudière · VMC',
+    cat:'terrain',
+    content:`
+      <div class="section-bar">Formule officielle</div>
+      <div class="code-box"><div class="code-label">À copier dans Nockee</div><div class="code-text">"S'allume · fonctionnement complet non vérifiable"</div></div>
+      <div class="section-bar">Types à identifier</div>
+      <div class="card">
+        <div style="display:flex;flex-direction:column;gap:8px">${[['Convecteur électrique','Grille de soufflage'],['Radiateur à inertie','Corps céramique ou fonte'],['Radiateur eau chaude','Robinet sur le côté'],['Plancher chauffant','Chaleur au sol, pas de radiateur'],['Clim réversible','Unité murale + télécommande'],['Chaudière','Marque + modèle + date entretien si visible']].map(([n,d])=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;font-weight:600;color:var(--navy)">${n}</span><span style="font-size:12px;color:var(--muted)">${d}</span></div>`).join('')}</div>
+      </div>
+      <div class="info-yellow">Hors saison (avril–septembre) : « Radiateur : non vérifiable hors période de chauffe »</div>
+    `
+  },
+  {
+    id:'cuisine', emoji:'🍳', name:'Cuisine équipée', desc:'Électroménager · Meubles',
+    cat:'terrain',
+    content:`
+      <div style="background:#0D2B5E;border-radius:12px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+        <div style="font-size:20px">📷</div>
+        <div><div style="font-size:12px;font-weight:700;color:#5BC8F5">PHOTO OBLIGATOIRE pour chaque appareil</div><div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:1px">Photographier allumé si possible · Photo état extérieur</div></div>
+      </div>
+      <div class="section-bar">Électroménager — Procédure</div>
+      <div class="card">
+        <div style="display:flex;flex-direction:column;gap:8px">${[['Plaques','Allumer chaque feu'],['Four','Allumer + éclairage intérieur'],['Hotte','Vitesse 1, 2 + lumière'],['Réfrigérateur','Froid, joint porte, tiroirs'],['Lave-vaisselle','Cycle visible, pas de fuite'],['Micro-ondes','Plateau tournant']].map(([n,d])=>`<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)"><div style="font-size:13px;font-weight:700;color:var(--navy);min-width:90px">${n}</div><div style="font-size:12px;color:var(--muted);flex:1">${d}</div><span style="font-size:12px;font-weight:700;color:#5BC8F5;flex-shrink:0">📷</span></div>`).join('')}</div>
+      </div>
+      <div class="info-yellow">⚠️ Logement meublé : 2 documents Nockee — EDL + Inventaire séparé</div>
+    `
+  },
+  {
+    id:'vétusté', emoji:'📐', name:'Grille vétusté', desc:'UNPI-CNL · Durées indicatives',
+    cat:'legal',
+    content:`
+      <div class="info-yellow">⚠️ Ces durées sont indicatives, pas contraignantes légalement. Elles servent de base de négociation.</div>
+      <table class="ref-table">
+        <thead><tr><th>Élément</th><th>Durée indicative</th></tr></thead>
+        <tbody>${[['Peintures / papiers peints','7 ans'],['Moquettes, sols souples','7 ans'],['Stores','8 ans'],['Lave-linge','8 ans'],['Mécanisme WC','10 ans'],['Réfrigérateur','10 ans'],['Lave-vaisselle','10 ans'],['Chauffe-eau','10 ans'],['Robinetterie','15 ans'],['Fenêtres simple vitrage','15 ans'],['Cuisine équipée','15 ans'],['Chaudière','15 ans'],['Radiateurs électriques','15 ans'],['Serrures','15 ans'],['Fenêtres double vitrage','20 ans'],['Portes intérieures','20 ans'],['Volets','20 ans'],['Parquet','25 ans'],['Carrelage','25 ans']].map(([e,d])=>`<tr><td>${e}</td><td><strong>${d}</strong></td></tr>`).join('')}</tbody>
+      </table>
+    `
+  },
+  {
+    id:'cas', emoji:'⚠️', name:'Cas particuliers', desc:'Imprévus · Procédures urgence',
+    cat:'terrain',
+    content:`
+      <div class="section-bar">Locataire absent</div>
+      <div class="card" style="border-left:3px solid var(--red)">
+        <div class="step-list">
+          <div class="step-item"><div class="step-num" style="background:var(--red)">1</div><div class="step-text">Attendre 30 min sur place</div></div>
+          <div class="step-item"><div class="step-num" style="background:var(--red)">2</div><div class="step-text">📷 Photo preuve de présence</div></div>
+          <div class="step-item"><div class="step-num" style="background:var(--red)">3</div><div class="step-text">💬 Prévenir Flatsy via le chat</div></div>
+        </div>
+      </div>
+      <div class="section-bar">Refus de signature</div>
+      <div class="card" style="border-left:3px solid var(--navy)">
+        <div class="step-list">
+          <div class="step-item"><div class="step-num">1</div><div class="step-text">Mettre fin à la mission</div></div>
+          <div class="step-item"><div class="step-num">2</div><div class="step-text">🔑 Le locataire garde les clés</div></div>
+          <div class="step-item"><div class="step-num">3</div><div class="step-text">💬 Informer immédiatement Flatsy</div></div>
+        </div>
+      </div>
+      <div class="info-blue" style="margin-top:10px">Sans signature → aucune retenue possible. Huissier possible (frais partagés).</div>
+    `
+  },
+  {
+    id:'litiges', emoji:'📋', name:'Litiges fréquents', desc:'8 erreurs · Règles clés',
+    cat:'legal',
+    content:`
+      <div class="section-bar">Les 8 erreurs qui coûtent cher</div>
+      <div class="card" style="background:#FFFFFF">
+        <div style="display:flex;flex-direction:column;gap:8px">${['Compteurs non relevés','Clés non testées · non photographiées','Pièce non décrite · absence des 4 murs','Photos floues · commentaire sans photo','Retard non signalé','Absence de signature','Formulation imprécise (état général sans détail)','Oscillo-battant testé dans une seule position'].map(e=>`<div style="display:flex;align-items:center;gap:8px;background:white;border-radius:12px;padding:8px 12px"><span style="min-width:22px;height:22px;background:var(--red);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">!</span><span style="font-size:13px;font-weight:600;color:var(--text)">${e}</span></div>`).join('')}</div>
+      </div>
+      <div class="section-bar">Règles clés</div>
+      <div class="card">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:#EBF8FF;border-radius:12px;padding:8px 12px"><div style="font-size:12px;font-weight:700;color:var(--navy)">Pas de signature</div><div style="font-size:12px;color:var(--navy)">→ Aucune retenue possible sur le dépôt</div></div>
+          <div style="background:#EBF8FF;border-radius:12px;padding:8px 12px"><div style="font-size:12px;font-weight:700;color:var(--flatsy-dark)">Pas d'EDL d\'entrée</div><div style="font-size:12px;color:var(--flatsy-dark)">→ Logement présumé en bon état</div></div>
+          <div style="background:#FFFBEB;border-radius:12px;padding:8px 12px"><div style="font-size:12px;font-weight:700;color:var(--amber)">Refus de signature</div><div style="font-size:12px;color:var(--amber)">→ Huissier · frais partagés</div></div>
+        </div>
+      </div>
+    `
+  },
+  {
+    id:'posture', emoji:'💬', name:"Posture agent", desc:"Mots interdits · Phrases terrain", cat:'pratique',
+    content:`
+      <div class="card" style="background:var(--navy);margin-bottom:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${[['📋','Neutre'],['📋','Factuel'],['🔍','Impartial'],['📄','Mandaté']].map(([e,l])=>`<div style="background:rgba(255,255,255,.1);border-radius:12px;padding:12px;text-align:center"><div style="font-size:22px;margin-bottom:4px">${e}</div><div style="font-size:12px;font-weight:700;color:white">${l}</div></div>`).join('')}</div>
+      </div>
+      <div class="section-bar">Mots interdits</div>
+      <div class="words-forbidden">${['usure','usage','vétuste','ancien','vieux','tartre'].map(w=>`<span class="word-tag">❌ ${w}</span>`).join('')}</div>
+      <div class="section-bar">Phrases terrain</div>
+      <div class="phrase-card arrival"><div class="phrase-context">À l'arrivée</div><div class="phrase-text">"Bonjour, je suis [nom], mandaté(e) par [agence] via Flatsy. Nous allons visiter pièce par pièce, décrire et photographier. Nous relirons ensemble avant signature."</div></div>
+      <div class="phrase-card"><div class="phrase-context">Locataire conteste</div><div class="phrase-text">"Je note ce que je constate. Vous pourrez faire vos observations avant de signer."</div></div>
+      <div class="phrase-card"><div class="phrase-context">Demande d'avis</div><div class="phrase-text">"Mon rôle est de constater, pas d'évaluer. L'agence prendra les décisions."</div></div>
+      <div class="phrase-card refus"><div class="phrase-context">Refus de signature</div><div class="phrase-text">"Sans signature, je dois mettre fin à la mission. L'agence pourra appeler un huissier."</div></div>
+    `
+  },
+  {
+    id:'loi', emoji:'📋', name:'Loi ALUR & Hoguet', desc:'Cadre légal · Obligations',
+    cat:'legal',
+    content:`
+      <div class="section-bar">Loi ALUR — Points essentiels</div>
+      <div class="card">
+        <div style="display:flex;flex-direction:column;gap:8px">${[['Mentions obligatoires dans l\'EDL','Adresse du logement · identité des parties · date · état de chaque pièce · relevés de compteurs · clés remises'],['Délai de modification','10 jours à compter de la signature pour signaler un oubli par LRAR'],['Plafond honoraires','3 €/m² max à la charge du locataire']].map(([t,d])=>`<div style="border-bottom:1px solid var(--border);padding-bottom:10px"><div style="font-weight:700;font-size:13px;color:var(--navy)">${t}</div><div style="font-size:12px;color:var(--muted);margin-top:3px;line-height:1.5">${d}</div></div>`).join('')}</div>
+      </div>
+      <div class="section-bar">Loi Hoguet</div>
+      <div class="info-blue">L'agent doit être mandaté par écrit par l'agence (ou le propriétaire) pour pouvoir réaliser un EDL légalement.</div>
+    `
+  },
+  {
+    id:'proprio-loc', emoji:'👥', name:'Proprio vs Locataire', desc:'Qui doit quoi ?',
+    cat:'legal',
+    content:`
+      <svg viewBox="0 0 340 164" xmlns="http://www.w3.org/2000/svg" style="width:100%;border-radius:12px;margin-bottom:14px;display:block">
+        <rect width="340" height="164" fill="#0D2B5E" rx="14"/>
+        <rect x="10" y="10" width="155" height="144" rx="10" fill="rgba(0,191,234,0.12)" stroke="#5BC8F5" stroke-width="1.2"/>
+        <circle cx="44" cy="36" r="9" fill="#5BC8F5"/>
+        <ellipse cx="44" cy="58" rx="14" ry="8" fill="#5BC8F5"/>
+        <text x="64" y="34" font-family="system-ui,sans-serif" font-size="11" font-weight="800" fill="#5BC8F5">LOCATAIRE</text>
+        <text x="64" y="47" font-family="system-ui,sans-serif" font-size="9" fill="rgba(255,255,255,0.45)">À sa charge</text>
+        <text x="18" y="82" font-family="system-ui,sans-serif" font-size="9.5" fill="rgba(255,255,255,0.85)">• Entretien courant</text>
+        <text x="18" y="97" font-family="system-ui,sans-serif" font-size="9.5" fill="rgba(255,255,255,0.85)">• Petites réparations</text>
+        <text x="18" y="112" font-family="system-ui,sans-serif" font-size="9.5" fill="rgba(255,255,255,0.85)">• Joints sanitaires</text>
+        <text x="18" y="127" font-family="system-ui,sans-serif" font-size="9.5" fill="rgba(255,255,255,0.85)">• Nettoyage VMC</text>
+        <text x="18" y="142" font-family="system-ui,sans-serif" font-size="9.5" fill="rgba(255,255,255,0.85)">• Taches / dégradations</text>
+        <rect x="175" y="10" width="155" height="144" rx="10" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.2)" stroke-width="1.2"/>
+        <circle cx="209" cy="36" r="9" fill="rgba(255,255,255,0.7)"/>
+        <ellipse cx="209" cy="58" rx="14" ry="8" fill="rgba(255,255,255,0.7)"/>
+        <text x="228" y="34" font-family="system-ui,sans-serif" font-size="11" font-weight="800" fill="rgba(255,255,255,0.9)">PROPRIÉTAIRE</text>
+        <text x="228" y="47" font-family="system-ui,sans-serif" font-size="9" fill="rgba(255,255,255,0.45)">À sa charge</text>
+        <text x="182" y="82" font-family="system-ui,sans-serif" font-size="9.5" fill="rgba(255,255,255,0.85)">• Vétusté normale</text>
+        <text x="182" y="97" font-family="system-ui,sans-serif" font-size="9.5" fill="rgba(255,255,255,0.85)">• Mise aux normes</text>
+        <text x="182" y="112" font-family="system-ui,sans-serif" font-size="9.5" fill="rgba(255,255,255,0.85)">• Tableau électrique</text>
+        <text x="182" y="127" font-family="system-ui,sans-serif" font-size="9.5" fill="rgba(255,255,255,0.85)">• Chauffe-eau</text>
+        <text x="182" y="142" font-family="system-ui,sans-serif" font-size="9.5" fill="rgba(255,255,255,0.85)">• Toiture / structure</text>
+      </svg>
+      <div class="section-bar">Détail complet</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="background:#EBF8FF;border-radius:12px;padding:12px">
+          <div style="font-size:12px;font-weight:700;color:var(--flatsy-dark);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Locataire</div>
+          ${['Entretien courant','Petites réparations','Propreté','Joints sanitaires','Ampoules','VMC','Débouchage','Poignées','Dégradations'].map(t=>`<div style="font-size:12px;color:var(--navy);padding:4px 0;border-bottom:1px solid rgba(0,191,234,.15)">• ${t}</div>`).join('')}
+        </div>
+        <div style="background:#F7F9FC;border-radius:12px;padding:12px">
+          <div style="font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Propriétaire</div>
+          ${['Vétusté normale','Mise aux normes','Sécurité','Tableau élec.','Porte entrée*','Chauffe-eau','Toiture','Canalisations'].map(t=>`<div style="font-size:12px;color:var(--navy);padding:4px 0;border-bottom:1px solid rgba(0,0,0,.06)">• ${t}</div>`).join('')}
+        </div>
+      </div>
+      <div class="info-yellow">* Porte d'entrée : à la charge du propriétaire sauf dégradation imputable au locataire.</div>
+    `
+  },
+  {
+    id:'pense-bete', emoji:'💡', name:'Pense-bête mission', desc:'Rappels · Ne rien oublier',
+    cat:'pratique',
+    content:`
+      <div class="info-blue">📌 Rappels essentiels pour chaque mission. Les templates complets sont dans Nockee.</div>
+      <div class="section-bar">Avant de partir</div>
+      <div id="pb-checklist" style="margin-bottom:8px"></div>
+      <div id="pb-reset-wrap" style="margin-bottom:16px"></div>
+      <div class="section-bar">Ce qu'on ne note jamais</div>
+      <div class="words-forbidden">${['usure normale','abîmé par le temps','vétuste','bon état général (seul)','semble fonctionner','paraît correct'].map(w=>`<span class="word-tag">❌ ${w}</span>`).join('')}</div>
+      <div class="section-bar">Formule chauffage</div>
+      <div class="code-box"><div class="code-label">Toujours</div><div class="code-text">"S'allume · fonctionnement complet non vérifiable"</div></div>
+      <div class="section-bar">Règle d'or signature</div>
+      <div class="card"><div style="font-size:14px;font-weight:700;color:var(--navy);line-height:1.5">Sans signature → mission nulle → aucune retenue possible<br><span style="color:var(--muted);font-size:12px;font-weight:400">Toujours relire avec le locataire avant de demander la signature.</span></div></div>
+    `,
+    checklist:['Mission dans Flatsy app ✓','Nockee ouvert + dossier prêt','Adresse et heure confirmées','Coordonnées locataire notées','Batterie chargée','Clés récupérées ou confirmées','Logement meublé ? (Inventaire séparé)']
+  },
+  {
+    id:'delais', emoji:'⏱', name:'Délais & recours',
+    desc:'10 jours · 1-2 mois · Commissaire',
+    cat:'legal',
+    content: `
+      <div class="section-bar">Délais légaux — mémo urgent</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+        <div style="background:#FFFBEB;border-left:4px solid #F59E0B;border-radius:0 8px 8px 0;padding:12px">
+          <div style="font-size:12px;font-weight:700;color:#F59E0B">10 jours — Contestation EDL d'entrée</div>
+          <div style="font-size:12px;color:#F59E0B;margin-top:3px">Le locataire peut contester par LRAR après signature.</div>
+          <div style="font-size:12px;color:#F59E0B;margin-top:2px">+ 1er mois de chauffe pour les équipements de chauffage</div>
+        </div>
+        <div style="background:#EBF8FF;border-left:4px solid #5BC8F5;border-radius:0 8px 8px 0;padding:12px">
+          <div style="font-size:12px;font-weight:700;color:var(--navy)">1 mois — Restitution dépôt (EDL conforme)</div>
+          <div style="font-size:12px;color:var(--navy);margin-top:3px">À compter de la remise des clés à la sortie.</div>
+        </div>
+        <div style="background:#EBF8FF;border-left:4px solid #5BC8F5;border-radius:0 8px 8px 0;padding:12px">
+          <div style="font-size:12px;font-weight:700;color:var(--navy)">2 mois — Restitution dépôt (EDL non conforme)</div>
+          <div style="font-size:12px;color:var(--navy);margin-top:3px">Avec justificatifs (devis, factures) obligatoires.</div>
+          <div style="font-size:12px;color:var(--navy);margin-top:2px">En copropriété : 20% du dépôt retenu jusqu'à arrêté annuel des charges.</div>
+        </div>
+        <div style="background:#FEF2F2;border-left:4px solid #E53E3E;border-radius:0 8px 8px 0;padding:12px">
+          <div style="font-size:12px;font-weight:700;color:#E53E3E">+10%/mois — Pénalité de retard</div>
+          <div style="font-size:12px;color:#E53E3E;margin-top:3px">+10% du loyer mensuel hors charges par mois entamé. Non due si pas de nouvelle adresse du locataire.</div>
+        </div>
+      </div>
+      <div class="section-bar">Recours en cas de litige</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${[
+          ["1. Commission de conciliation","Gratuit, département. Obligatoire avant saisir tribunal."],
+          ["2. Conciliateur de justice","Gratuit, tribunal instance. Règlement amiable."],
+          ["3. Juge des contentieux","Tribunal judiciaire. En dernier recours."],
+          ["Commissaire de justice","Prévient 7 jours min. par LRAR · Frais 50/50 · Constat incontestable"]
+        ].map(([k,v])=>`<div style="background:#F7F9FC;border-radius:8px;padding:12px">
+          <div style="font-size:12px;font-weight:700;color:var(--navy)">${k}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">${v}</div>
+        </div>`).join('')}
+      </div>
+    `
+  },
+  {
+    id:'cles', emoji:'🔑', name:'Clés & accès',
+    desc:'Protocole obligatoire · Décret 2016-382',
+    cat:'terrain',
+    content: `
+      <div class="section-bar">Protocole — dans cet ordre</div>
+      <div style="background:#0D2B5E;border-radius:12px;padding:12px;margin-bottom:12px">
+        <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">
+          <span style="background:#5BC8F5;color:var(--navy);font-weight:700;font-size:12px;border-radius:20px;padding:4px 10px">COMPTER</span>
+          <span style="background:#5BC8F5;color:var(--navy);font-weight:700;font-size:12px;border-radius:20px;padding:4px 10px">TESTER</span>
+          <span style="background:#5BC8F5;color:var(--navy);font-weight:700;font-size:12px;border-radius:20px;padding:4px 10px">PHOTOGRAPHIER</span>
+        </div>
+        ${[
+          ["🔑","Porte d'entrée appartement","X exemplaires"],
+          ["📬","Boîte aux lettres","1 ou 2 clés"],
+          ["🏢","Porte d'immeuble / hall","Clé ou badge ou digicode"],
+          ["🗄","Cave / cellier","Si inclus dans le bail"],
+          ["🚗","Parking / garage","Clé + télécommande + badge"],
+          ["📺","Volets motorisés","Télécommande"],
+          ["📟","Visiophone / portail","Badge ou code"]
+        ].map(([ic,k,v])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.08)">
+          <span style="font-size:12px;font-weight:700;color:var(--border)">${ic} ${k}</span>
+          <span style="font-size:12px;color:var(--muted)">${v}</span>
+        </div>`).join('')}
+      </div>
+      <div style="background:#FEF2F2;border-radius:8px;padding:12px;font-size:12px;color:#E53E3E;line-height:1.5"><strong>Pourquoi c'est critique :</strong> sans mention à l'entrée, le bailleur ne peut pas retenir le coût de remplacement d'une clé manquante à la sortie. C'est une mention légalement obligatoire (décret 2016-382).</div>
+    `
+  },
+  {
+    id:'reparations', emoji:'🔧', name:'Réparations locatives',
+    desc:'Décret 87-712 · Qui paie quoi',
+    cat:'legal',
+    content: `
+      <div class="section-bar">Charge locataire — entretien courant</div>
+      <div class="card" style="margin-bottom:12px">
+        <div style="columns:2;gap:8px">
+          ${["Joints de robinets","Mécanisme chasse d'eau","Ampoules + fusibles","Filtre VMC","Entretien chaudière (contrat annuel)","Ramonage conduit ventilation","Petits trous de cheville","Vitre cassée accidentellement","Serrure (usage normal)","Détartrage robinetterie","Graissage paumelles et charnières","Nettoyage grilles ventilation"].map(x=>`<div style="font-size:12px;color:#38A169;margin-bottom:5px;break-inside:avoid">✓ ${x}</div>`).join('')}
+        </div>
+      </div>
+      <div class="section-bar">Charge propriétaire — bâti & vétusté</div>
+      <div class="card" style="margin-bottom:12px">
+        <div style="columns:2;gap:8px">
+          ${["Remplacement chaudière","Robinetterie vétuste","Porte ou fenêtre défaillante","Électricité structurelle","Canalisations (vétusté)","Toiture / façade / isolation","Serrure vétuste","Moisissures structurelles","Ravalement façade","Remplacement VMC","Double vitrage","Radiateurs"].map(x=>`<div style="font-size:12px;color:#E53E3E;margin-bottom:5px;break-inside:avoid">✗ ${x}</div>`).join('')}
+        </div>
+      </div>
+      <div class="info-yellow">⚠️ <strong>La règle d'or :</strong> si l'usure est due au <em>temps</em> et non au comportement du locataire, c'est de la vétusté → charge propriétaire, même si l'élément figure dans la liste décret 87-712.</div>
+    `
+  },
+];
+
+const QUIZ_QUESTIONS = [
+  {q:"La grille vétusté UNPI-CNL a-t-elle une valeur légale contraignante ?",
+   opts:["Oui, imposée par la loi","Oui pour logements > 10 ans","Non, ses durées sont indicatives","Oui depuis la loi ALUR"],
+   correct:2, exp:"La grille UNPI-CNL est un accord indicatif, pas une loi. Aucune valeur légale contraignante."},
+  {q:"En EDL d'entrée, quel document le locataire doit fournir ?",
+   opts:["Pièce d'identité","Attestation d'assurance habitation","Avis d'imposition","Contrat de travail"],
+   correct:1, exp:"L'attestation d'assurance habitation est obligatoire pour un EDL d'entrée."},
+  {q:"Comment noter l'index d'un compteur Linky ?",
+   opts:["Tous les index affichés","Moyenne des deux derniers","1 seul index","Le PRM uniquement"],
+   correct:2, exp:"Pour un Linky, on note 1 seul index. Pour un ancien compteur : relevé exact."},
+  {q:"Joints noircis dans une salle de bain =",
+   opts:["État moyen","Mauvais état","Normal avec l'humidité","À préciser selon ancienneté"],
+   correct:1, exp:"Joints noircis = mauvais état. À noter et photographier systématiquement."},
+  {q:"En cas de refus de signature du locataire :",
+   opts:["Faire signer sur feuille libre","Continuer sans signature","Mettre fin — locataire garde clés — informer Flatsy","Appeler les forces de l'ordre"],
+   correct:2, exp:"Sans signature, la mission s'arrête. L'agence peut faire appel à un huissier."},
+  {q:"Formulation correcte pour un radiateur électrique :",
+   opts:["Très vieux, à changer","Semble fonctionner","S'allume – fonctionnement complet non vérifiable","Non testé"],
+   correct:2, exp:"On ne peut pas vérifier le fonctionnement complet. Formulation standard officielle."},
+  {q:"Comment nommer deux chambres dans un appartement ?",
+   opts:["Chambre 1, Chambre 2","Grande chambre, petite chambre","Chambre côté rue, Chambre fond couloir","Chambre principale, chambre secondaire"],
+   correct:2, exp:"On nomme les chambres par leur position géographique dans le logement."},
+  {q:"Si aucun EDL d'entrée n'a été réalisé :",
+   opts:["Le propriétaire peut retenir tout le dépôt","Le locataire doit prouver le bon état","Le logement est présumé en bon état","L'EDL de sortie est annulé"],
+   correct:2, exp:"Sans EDL d'entrée, le logement est présumé en bon état — le locataire est protégé par la loi."},
+  {q:"Délai légal pour contester un EDL d'entrée après signature :",
+   opts:["3 jours","10 jours","1 mois","Pas de délai — contestation toujours possible"],
+   correct:1, exp:"Le locataire dispose de 10 jours après la signature pour contester l'EDL d'entrée par LRAR. Après ce délai, l'EDL est opposable."},
+  {q:"Si l'EDL de sortie révèle des dégradations, le bailleur a combien de temps pour restituer le dépôt ?",
+   opts:["1 mois","2 mois","3 mois","6 mois"],
+   correct:1, exp:"2 mois si des dégradations sont constatées (avec justificatifs). 1 mois si l'EDL est conforme. Calculé depuis la remise des clés."},
+  {q:"Quelle pénalité s'applique si le dépôt de garantie est restitué en retard ?",
+   opts:["Aucune pénalité légale","5% du loyer par mois","10% du loyer mensuel par mois entamé","Le dépôt est doublé"],
+   correct:2, exp:"+10% du loyer mensuel hors charges par mois de retard entamé. Non due si le locataire n'a pas fourni sa nouvelle adresse."},
+  {q:"L'entretien annuel de la chaudière est à la charge de :",
+   opts:["Le propriétaire","Le locataire","50/50","Selon le bail"],
+   correct:1, exp:"L'entretien annuel de la chaudière (contrat de maintenance) est une réparation locative à la charge du locataire. Le remplacement d'une chaudière défaillante est à la charge du propriétaire."},
+  {q:"Des moisissures sont détectées dans l'angle d'une salle de bain. La VMC fonctionne. C'est probablement :",
+   opts:["Dégradation locataire — manque d'aération","Vétusté propriétaire — condensation normale","Impossible à déterminer sans expertise","Dégradation partagée 50/50"],
+   correct:0, exp:"Si la VMC fonctionne, les moisissures résultent probablement d'un manque d'aération du locataire. Si la VMC est HS, la responsabilité bascule vers le propriétaire."},
+  {q:"Que faut-il noter pour les clés dans l'EDL d'entrée ?",
+   opts:["Juste le nombre total","Nombre + destination de chaque type (appart, boîte aux lettres, immeuble...)","Seulement si le locataire demande","Rien — les clés ne font pas partie de l'EDL"],
+   correct:1, exp:"Le détail des clés est une mention légalement obligatoire (décret 2016-382) : nombre + destination de chaque clé/badge/télécommande. Sans cette mention, impossible de retenir le coût de remplacement à la sortie."},
+  {q:"L'EDL de sortie doit-il citer l'EDL d'entrée ?",
+   opts:["Non, c'est un document indépendant","Oui, il doit permettre la comparaison avec l'entrée","Seulement en cas de litige","Seulement pour les meublés"],
+   correct:1, exp:"Le décret 2016-382 impose que l'EDL de sortie permette la comparaison avec l'EDL d'entrée. C'est son objectif principal : identifier ce qui a changé depuis l'entrée."},
+  {q:"Dans un logement meublé, combien de documents doivent être complétés dans Nockee ?",
+   opts:["1 — l'EDL suffit pour tout","2 — l'EDL + l'inventaire du mobilier (signés séparément)","3 — EDL + inventaire + liste électroménager","1 — l'inventaire remplace l'EDL"],
+   correct:1, exp:"Logement meublé = 2 documents distincts : l'EDL (état des surfaces) + l'inventaire du mobilier. Les deux doivent être complétés et signés séparément dans Nockee."},
+  {q:"Un commissaire de justice est mandaté pour réaliser un EDL. Combien de jours à l'avance doit-il prévenir les parties ?",
+   opts:["24h","3 jours","7 jours minimum","14 jours"],
+   correct:2, exp:"Le commissaire de justice doit prévenir les deux parties par LRAR au moins 7 jours avant. Son constat est incontestable même en l'absence d'une partie."},
+  {q:"Les frais d'un commissaire de justice pour un EDL sont répartis :",
+   opts:["Entièrement à la charge du locataire","Entièrement à la charge du bailleur","50/50 entre les deux parties","Selon qui a demandé l'intervention"],
+   correct:2, exp:"Les frais du commissaire de justice sont partagés à 50/50 entre le bailleur et le locataire, quelle que soit la partie qui a initié la démarche."},
+  {q:"Surface minimale légale pour qu'un logement soit considéré comme décent :",
+   opts:["6 m²","9 m²","12 m²","15 m²"],
+   correct:1, exp:"Un logement décent doit mesurer au moins 9 m² avec un volume habitable de 20 m³ minimum. Hauteur sous plafond minimale : 2,20 m."},
+  {q:"Un trou de cheville dans un mur : c'est à la charge de :",
+   opts:["Le propriétaire — vétusté","Le locataire — réparation locative","50/50","Selon la taille du trou"],
+   correct:1, exp:"Les petits trous de cheville font partie des réparations locatives (décret 87-712) : c'est à la charge du locataire. À distinguer d'une fissure structurelle (propriétaire)."},
+  {q:"La durée indicative de vétusté des peintures selon la grille UNPI-CNL est :",
+   opts:["3 ans","5 ans","7 ans","10 ans"],
+   correct:2, exp:"Peintures et papiers peints : 7 ans selon la grille UNPI-CNL. Passé ce délai, le propriétaire ne peut en principe retenir aucun frais de remise en peinture."},
+  {q:"Pour l'EDL d'entrée, le plafond des honoraires facturables au locataire (depuis janvier 2026) est :",
+   opts:["2 €/m²","3 €/m²","3,03 €/m²","5 €/m²"],
+   correct:2, exp:"Depuis le 1er janvier 2026, le plafond est de 3,03 €/m² (arrêté du 17 juillet 2025). La part locataire ne peut pas dépasser la part bailleur. L'EDL de sortie est entièrement à la charge du bailleur."},
+];
+
+const ERREURS_CONTENT = [
+  {
+    title:"❌ Compteurs non relevés",
+    body:"Les index eau, électricité et gaz sont obligatoires. Sans eux, impossible de facturer les consommations ou de prouver l'état à l\'entrée. <strong>Toujours photographier le compteur ET noter l'index dans Nockee.</strong>"
+  },
+  {
+    title:"❌ Formulation imprécise",
+    body:"Écrire <em>« bon état général »</em> seul est contestable. Il faut toujours préciser : matériau + localisation + dimension du défaut. Ex : <em>« Carrelage 60×60, 2 carreaux fissurés au centre pièce, ~10 cm »</em>"
+  },
+  {
+    title:"❌ Photos absentes ou floues",
+    body:"Chaque défaut mentionné dans l'EDL <strong>doit être accompagné d'une photo nette</strong>. Une photo floue ou mal cadrée ne vaut rien en cas de litige. Prenez 2-3 photos par défaut."
+  },
+  {
+    title:"❌ Pièce incomplète — mur manquant",
+    body:"Chaque pièce doit décrire les 4 murs, le plafond et le sol. Oublier un mur expose à une contestation. <strong>Utilisez l'ordre systématique : sol → murs → plafond → équipements.</strong>"
+  },
+  {
+    title:"❌ Clés non testées / non photographiées",
+    body:"Chaque jeu de clé remis doit être testé (ça ouvre ?), compté, et photographié. En cas de perte, c'est la seule preuve."
+  },
+  {
+    title:"❌ Absence ou refus de signature",
+    body:"Sans signature du locataire, <strong>aucune retenue n'est possible</strong> sur le dépôt de garantie. En cas de refus, mettre fin à la mission, laisser les clés au locataire, informer Flatsy immédiatement."
+  },
+  {
+    title:"❌ Retard non signalé",
+    body:"Si vous êtes en retard ou ne pouvez pas vous rendre sur place, prévenir <strong>immédiatement</strong> Flatsy via le chat. Un agent absent sans signal = mission en échec facturable."
+  },
+  {
+    title:"❌ Mots qui qualifient la vétusté",
+    body:"Écrire <em>« abîmé par le temps »</em>, <em>« usure normale »</em>, <em>« ancien »</em> ou <em>« vieux »</em> qualifie automatiquement la vétusté — à la charge du propriétaire. Ces mots sont <strong>interdits</strong> dans un EDL."
+  }
+];
+
+const REGLES_CONTENT = [
+  {
+    title:"⏱ Délais légaux — à connaître absolument",
+    body:`<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:6px">
+      <div style="background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:0 8px 8px 0;padding:8px 12px">
+        <div style="font-size:12px;font-weight:700;color:#F59E0B;text-transform:uppercase;margin-bottom:4px">10 jours — contestation EDL d'entrée</div>
+        <div style="font-size:12px;color:#F59E0B;line-height:1.5">Après signature, le locataire peut contester l'EDL d'entrée dans les 10 jours. Il doit envoyer un LRAR au bailleur avec les points contestés.</div>
+      </div>
+      <div style="background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:0 8px 8px 0;padding:8px 12px">
+        <div style="font-size:12px;font-weight:700;color:#F59E0B;text-transform:uppercase;margin-bottom:4px">1er mois de chauffe — équipements chauffage</div>
+        <div style="font-size:12px;color:#F59E0B;line-height:1.5">Délai supplémentaire pour contester l'état des équipements de chauffage. Un radiateur qui ne chauffe pas ne peut pas être détecté en été.</div>
+      </div>
+      <div style="background:#EBF8FF;border-left:3px solid #5BC8F5;border-radius:0 8px 8px 0;padding:8px 12px">
+        <div style="font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:4px">1 mois — restitution dépôt de garantie (EDL conforme)</div>
+        <div style="font-size:12px;color:var(--navy);line-height:1.5">Si l'EDL de sortie est conforme à l'EDL d'entrée, le bailleur a <strong>1 mois</strong> pour restituer le dépôt. Délai calculé à compter de la remise des clés.</div>
+      </div>
+      <div style="background:#EBF8FF;border-left:3px solid #5BC8F5;border-radius:0 8px 8px 0;padding:8px 12px">
+        <div style="font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:4px">2 mois — restitution dépôt de garantie (EDL non conforme)</div>
+        <div style="font-size:12px;color:var(--navy);line-height:1.5">Si des dégradations sont constatées, le bailleur a <strong>2 mois</strong>. Il doit fournir les justificatifs (devis, factures) des retenues.</div>
+      </div>
+      <div style="background:#FEF2F2;border-left:3px solid #E53E3E;border-radius:0 8px 8px 0;padding:8px 12px">
+        <div style="font-size:12px;font-weight:700;color:#E53E3E;text-transform:uppercase;margin-bottom:4px">+10% du loyer mensuel par mois de retard</div>
+        <div style="font-size:12px;color:#E53E3E;line-height:1.5">Pénalité automatique si le bailleur ne restitue pas dans les délais. Non due si le locataire n'a pas transmis sa nouvelle adresse.</div>
+      </div>
+    </div>`
+  },
+  {
+    title:"📋 Mentions obligatoires — décret 2016-382",
+    body:`<div style="font-size:12px;color:var(--text);line-height:1.6;margin-bottom:8px">Tout EDL doit impérativement mentionner ces éléments (décret 2016-382) — leur absence peut invalider le document :</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${[
+        ["Type d'EDL","Entrée ou sortie — jamais ambigu"],
+        ["Date et heure","Date de réalisation + heure si possible"],
+        ["Localisation","Adresse complète + étage + numéro de lot"],
+        ["Noms des parties","Locataire + bailleur (ou mandataire)"],
+        ["Relevés compteurs","Électricité, eau froide, eau chaude, gaz"],
+        ["Clés et accès","Nombre exact + destination de chaque clé"],
+        ["Description pièce par pièce","Sol, murs, plafond, équipements"],
+        ["Signatures","Les deux parties ou commissaire de justice"]
+      ].map(([k,v])=>`<div style="background:#F7F9FC;border-radius:8px;padding:8px 8px;display:flex;gap:8px;align-items:flex-start">
+        <span style="font-size:12px;font-weight:600;color:var(--navy);min-width:130px;padding-top:1px">${k}</span>
+        <span style="font-size:12px;color:var(--text)">${v}</span>
+      </div>`).join('')}
+    </div>`
+  },
+  {
+    title:"🔑 Protocole clés & accès — obligatoire",
+    body:`<div style="font-size:12px;color:var(--text);line-height:1.5;margin-bottom:10px">Le détail des clés remises est <strong>une mention légalement obligatoire</strong> (décret 2016-382). En cas de clé manquante à la sortie, c'est la seule preuve possible.</div>
+    <div style="background:#0D2B5E;border-radius:12px;padding:12px;margin-bottom:8px">
+      <div style="font-size:12px;font-weight:700;color:#5BC8F5;margin-bottom:8px;text-transform:uppercase">Ce qu'il faut noter pour chaque accès</div>
+      ${[
+        ["Porte d'entrée appartement","Nombre d'exemplaires (ex : 2 clés)"],
+        ["Boîte aux lettres","1 clé ou plus selon cas"],
+        ["Porte d'immeuble / hall","Clé ou badge ou digicode"],
+        ["Cave / cellier","Clé si annexe incluse au bail"],
+        ["Parking / garage","Clé + télécommande + badge"],
+        ["Volets roulants","Télécommande si motorisée"],
+        ["Visiophone / portail","Badge ou code remis"]
+      ].map(([k,v])=>`<div style="display:flex;gap:8px;margin-bottom:6px">
+        <span style="font-size:18px">🔑</span>
+        <div><div style="font-size:12px;font-weight:700;color:var(--border)">${k}</div><div style="font-size:12px;color:var(--muted)">${v}</div></div>
+      </div>`).join('')}
+    </div>
+    <div style="background:#FEF2F2;border-radius:8px;padding:12px;font-size:12px;color:#E53E3E"><strong>Si une clé remise à l'entrée n'est pas restituée à la sortie,</strong> le bailleur peut retenir le coût de remplacement du cylindre — mais seulement si elle était notée à l'entrée.</div>`
+  },
+  {
+    title:"🔧 Réparations locatives — décret 87-712",
+    body:`<div style="font-size:12px;color:var(--text);line-height:1.5;margin-bottom:10px">Le décret 87-712 liste ce qui est à la charge du locataire (entretien courant). Ce n'est <strong>pas de la dégradation</strong>, c'est de l'entretien normal — mais ça reste à la charge du locataire.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div style="background:#EBF8FF;border-radius:12px;padding:12px">
+        <div style="font-size:12px;font-weight:700;color:#38A169;text-transform:uppercase;margin-bottom:6px">✓ Charge locataire</div>
+        ${["Joints de robinetterie","Mécanisme chasse d'eau","Ampoules et fusibles","Entretien VMC (filtre)","Entretien chaudière (contrat annuel)","Ramonage conduits","Vitres cassées (accidentellement)","Serrure (usage normal)","Petits trous de cheville"].map(x=>`<div style="font-size:12px;color:#38A169;margin-bottom:3px;line-height:1.3">• ${x}</div>`).join('')}
+      </div>
+      <div style="background:#FEF2F2;border-radius:12px;padding:12px">
+        <div style="font-size:12px;font-weight:700;color:#E53E3E;text-transform:uppercase;margin-bottom:6px">✗ Charge propriétaire</div>
+        ${["Remplacement chaudière","Remplacement robinetterie vétuste","Remplacement porte/fenêtre","Problème électrique structurel","Canalisations bouchées (vétusté)","Toiture / façade / isolation","Remplacement serrure (vétusté)","Moisissures structurelles"].map(x=>`<div style="font-size:12px;color:#E53E3E;margin-bottom:3px;line-height:1.3">• ${x}</div>`).join('')}
+      </div>
+    </div>
+    <div style="background:#FFFBEB;border-radius:8px;padding:12px;font-size:12px;color:#F59E0B">⚠️ Limite : si la dégradation vient de la <strong>vétusté</strong> (usure du temps) et non d'un manque d'entretien du locataire, c'est au propriétaire. Le contexte prime sur la liste.</div>`
+  },
+  {
+    title:"🏠 Logement décent — seuils légaux",
+    body:`<div style="font-size:12px;color:var(--text);line-height:1.5;margin-bottom:10px">Un logement doit respecter des critères minimaux de décence (loi 89-462). Si ce n'est pas le cas, l'agent doit le signaler à Flatsy — il ne peut pas réaliser l'EDL sans réserve.</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${[
+        ["Surface","9 m² minimum, 20 m³ de volume habitable"],
+        ["Hauteur sous plafond","2,20 m minimum"],
+        ["Chauffage","Système de chauffage présent et fonctionnel"],
+        ["Eau courante","Eau froide + eau chaude obligatoires"],
+        ["Sanitaires","WC + point d'eau à usage privatif ou au moins à l'intérieur du bâtiment"],
+        ["Fenêtres","Au moins une fenêtre ouvrant sur l'extérieur dans la pièce principale"],
+        ["Électricité","Installation conforme, pas de danger apparent"],
+        ["Pas de nuisibles","Absence de rongeurs, insectes en infestation"]
+      ].map(([k,v])=>`<div style="background:#F7F9FC;border-radius:8px;padding:8px 8px">
+        <div style="font-size:12px;font-weight:700;color:var(--navy)">${k}</div>
+        <div style="font-size:12px;color:var(--text);margin-top:2px">${v}</div>
+      </div>`).join('')}
+    </div>
+    <div style="background:#FEF2F2;border-radius:8px;padding:12px;font-size:12px;color:#E53E3E;margin-top:8px"><strong>Si le logement ne respecte pas ces critères :</strong> noter les manquements dans l'EDL, photographier, signaler immédiatement à Flatsy. Ne pas valider l'EDL comme "conforme".</div>`
+  },
+  {
+    title:"💰 Honoraires EDL — ce que peut payer le locataire",
+    body:`<div style="font-size:12px;color:var(--text);line-height:1.5;margin-bottom:10px">La loi ALUR + décret 2014-890 encadrent les frais d'EDL facturables au locataire. À connaître pour comprendre le modèle économique Flatsy.</div>
+    <div style="background:#0D2B5E;border-radius:12px;padding:12px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:700;color:#5BC8F5">Plafond légal EDL d'entrée</div>
+        <div style="background:#5BC8F5;color:var(--navy);font-size:14px;font-weight:700;border-radius:20px;padding:4px 14px">3,03 €/m²</div>
+      </div>
+      <div style="font-size:12px;color:var(--muted)">Depuis le 1er janvier 2026 (arrêté du 17 juillet 2025). Uniquement pour l'EDL d'entrée, pas la sortie.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="background:#EBF8FF;border-radius:8px;padding:8px 8px;font-size:12px;color:#38A169">✓ La part locataire ne peut pas dépasser la part bailleur</div>
+      <div style="background:#EBF8FF;border-radius:8px;padding:8px 8px;font-size:12px;color:#38A169">✓ EDL de sortie : entièrement à la charge du bailleur</div>
+      <div style="background:#FEF2F2;border-radius:8px;padding:8px 8px;font-size:12px;color:#E53E3E">✗ Si réalisé par un commissaire de justice : frais partagés 50/50</div>
+    </div>`
+  }
+];
+
+// ══════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════
+let currentTab = 'home';
+let currentModule = null;
+let currentFiche = null;
+let quizAnswers = {};
+let moduleProgress = JSON.parse(localStorage.getItem('edl_progress') || '{}');
+let savedScore = localStorage.getItem('edl_quiz_score');
+let checklistState = JSON.parse(localStorage.getItem('edl_chk') || '{}');
+let pbChecklistState = JSON.parse(localStorage.getItem('edl_pb_chk') || '{}');
+let fichesSeen = JSON.parse(localStorage.getItem('edl_fiches_seen') || '{}');
+let ficheFavs = JSON.parse(localStorage.getItem('edl_fiche_favs') || '{}');
+let darkMode = localStorage.getItem('edl_dark') === 'true';
+
+// Apply dark mode on load
+if(darkMode) document.documentElement.classList.add('dark');
+
+function toggleDarkMode() {
+  darkMode = !darkMode;
+  document.documentElement.classList.toggle('dark', darkMode);
+  localStorage.setItem('edl_dark', darkMode);
+  const icon = document.getElementById('dark-icon');
+  if(icon) {
+    icon.innerHTML = darkMode
+      ? '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'
+      : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════════════
+function switchTab(tab) {
+  ['home','fiches','erreurs','quiz'].forEach(t => {
+    const tabEl = document.getElementById('tab-' + t);
+    const scr = document.getElementById('screen-' + t);
+    if(tabEl) tabEl.classList.toggle('active', t === tab);
+    if(scr) scr.classList.toggle('active', t === tab);
+  });
+  document.getElementById('screen-module').classList.remove('active');
+  document.getElementById('screen-fiche-detail').classList.remove('active');
+
+  currentTab = tab;
+  document.getElementById('tab-home').classList.toggle('active', tab === 'home');
+
+  if(tab === 'home') renderHome();
+  if(tab === 'fiches') renderFiches();
+  if(tab === 'erreurs') renderErreurs();
+  if(tab === 'quiz') renderQuiz();
+
+  // Scroll to top on tab switch
+  const activeScroll = document.querySelector('#screen-' + tab + ' .scroll');
+  if(activeScroll) activeScroll.scrollTop = 0;
+}
+
+function openModule(id) {
+  const mod = MODULES.find(m => m.id === id);
+  if(!mod) return;
+  currentModule = id;
+
+  // Mark as seen
+  moduleProgress[id] = true;
+  localStorage.setItem('edl_progress', JSON.stringify(moduleProgress));
+
+  document.getElementById('module-topbar-title').textContent = 'Module ' + id;
+  const scroll = document.getElementById('module-scroll');
+
+  let quizHtml = '';
+  if(mod.quiz) {
+    quizHtml = mod.quiz.map((q, qi) => `
+      <div class="q-block" id="mq-${id}-${qi}">
+        <div class="q-num">Question ${qi+1}</div>
+        <div class="q-text">${q.q}</div>
+        ${q.opts.map((o,oi) => `<div class="q-opt" onclick="answerModuleQuiz(${id},${qi},${oi},${q.correct})">${o}</div>`).join('')}
+        <div class="q-feedback" id="mq-fb-${id}-${qi}">💡 ${q.exp}</div>
+      </div>
+    `).join('');
+  }
+
+  scroll.innerHTML = `<div style="padding-bottom:8px">
+    <div style="background:${mod.color};border-radius:12px;padding:16px 16px 14px;margin-bottom:16px">
+      <div style="font-size:32px;margin-bottom:8px">${mod.emoji}</div>
+      <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:22px;color:var(--navy)">${mod.title}</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:4px">${mod.sub}</div>
+    </div>
+    ${mod.content}
+  </div>`;
+
+  // Replace quiz placeholder
+  const qPlaceholder = scroll.querySelector('#module-quiz-' + id);
+  if(qPlaceholder && quizHtml) qPlaceholder.outerHTML = quizHtml;
+
+  // Render checklist if module has one
+  if(mod.checklist) {
+    const chkDiv = scroll.querySelector('#checklist-2');
+    if(chkDiv) renderChecklist(chkDiv, mod.checklist, 'mod' + id);
+    const mod2Reset = scroll.querySelector('#mod2-reset-wrap');
+    if(mod2Reset) renderModResetBtn(mod2Reset, mod.checklist, 'mod' + id);
+  }
+
+  // Show module screen
+  document.getElementById('screen-home').classList.remove('active');
+  document.getElementById('screen-module').classList.add('active');
+  scroll.scrollTop = 0;
+}
+
+function openFiche(id) {
+  const fiche = FICHES.find(f => f.id === id);
+  if(!fiche) return;
+  currentFiche = id;
+  // Track fiche as seen
+  fichesSeen[id] = true;
+  localStorage.setItem('edl_fiches_seen', JSON.stringify(fichesSeen));
+  document.getElementById('fiche-topbar-title').textContent = fiche.name;
+  const scroll = document.getElementById('fiche-detail-scroll');
+  scroll.innerHTML = `<div style="padding-bottom:8px">
+    <div style="background:var(--bg);border-bottom:1px solid var(--border);padding:16px 0 14px;margin-bottom:16px">
+      <span style="font-size:40px;display:block;margin-bottom:8px">${fiche.emoji}</span>
+      <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:22px;color:var(--navy)">${fiche.name}</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:4px">${fiche.desc}</div>
+    </div>
+    ${fiche.content}
+  </div>`;
+
+  // Render pense-bete checklist
+  if(fiche.checklist) {
+    const pbDiv = scroll.querySelector('#pb-checklist');
+    if(pbDiv) renderChecklist(pbDiv, fiche.checklist, 'pb');
+    const resetWrap = scroll.querySelector('#pb-reset-wrap');
+    if(resetWrap) renderResetBtn(resetWrap, fiche.checklist);
+  }
+
+  document.getElementById('screen-fiches').classList.remove('active');
+  document.getElementById('screen-fiche-detail').classList.add('active');
+  scroll.scrollTop = 0;
+}
+
+function goBack(to) {
+  const dest = to || 'home';
+  document.getElementById('screen-module').classList.remove('active');
+  document.getElementById('screen-fiche-detail').classList.remove('active');
+  if(dest === 'fiches') {
+    document.getElementById('screen-fiches').classList.add('active');
+  } else {
+    // Return to current tab
+    const scr = document.getElementById('screen-' + currentTab);
+    if(scr) scr.classList.add('active');
+    else document.getElementById('screen-home').classList.add('active');
+  }
+  // Update progress on home if needed
+  if(currentTab === 'home') renderHome();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CHECKLIST
+// ══════════════════════════════════════════════════════════════════
+function renderChecklist(container, items, storeKey) {
+  const state = storeKey === 'pb' ? pbChecklistState : checklistState;
+  container.innerHTML = items.map((item, i) => {
+    const key = storeKey + '_' + i;
+    const done = !!state[key];
+    return `<div class="chk-item ${done ? 'done' : ''}" onclick="toggleChk('${storeKey}',${i},this)">
+      <div class="chk-box">${done ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</div>
+      <div class="chk-label">${item}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleChk(storeKey, idx, el) {
+  const state = storeKey === 'pb' ? pbChecklistState : checklistState;
+  const key = storeKey + '_' + idx;
+  state[key] = !state[key];
+  if(storeKey === 'pb') localStorage.setItem('edl_pb_chk', JSON.stringify(pbChecklistState));
+  else localStorage.setItem('edl_chk', JSON.stringify(checklistState));
+  el.classList.toggle('done', !!state[key]);
+  const box = el.querySelector('.chk-box');
+  box.innerHTML = state[key] ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+  el.querySelector('.chk-label').style.textDecoration = state[key] ? 'line-through' : '';
+  // Update reset button visibility
+  if(storeKey === 'pb') {
+    const fiche = FICHES.find(f => f.id === 'pense-bete');
+    const resetWrap = document.querySelector('#pb-reset-wrap');
+    if(fiche && resetWrap) renderResetBtn(resetWrap, fiche.checklist);
+  } else if(storeKey.startsWith('mod')) {
+    const mod = MODULES.find(m => 'mod' + m.id === storeKey);
+    const modResetWrap = document.querySelector('#mod2-reset-wrap');
+    if(mod && mod.checklist && modResetWrap) renderModResetBtn(modResetWrap, mod.checklist, storeKey);
+  }
+}
+
+function renderResetBtn(container, items) {
+  const hasChecked = items.some((_, i) => !!pbChecklistState['pb_' + i]);
+  container.innerHTML = hasChecked ? `<button onclick="resetPbChecklist()" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:10px 16px;background:var(--navy);color:white;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s ease"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>Nouvelle mission</button>` : '';
+}
+
+function renderModResetBtn(container, items, storeKey) {
+  const hasChecked = items.some((_, i) => !!checklistState[storeKey + '_' + i]);
+  container.innerHTML = hasChecked ? '<button onclick="resetModChecklist(\'' + storeKey + '\')" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:10px 16px;background:var(--navy);color:white;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s ease"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>Nouvelle mission</button>' : '';
+}
+
+function resetModChecklist(storeKey) {
+  Object.keys(checklistState).forEach(k => { if(k.startsWith(storeKey + '_')) delete checklistState[k]; });
+  localStorage.setItem('edl_chk', JSON.stringify(checklistState));
+  const mod = MODULES.find(m => 'mod' + m.id === storeKey);
+  if(mod && mod.checklist) {
+    const chkDiv = document.querySelector('#checklist-2');
+    if(chkDiv) renderChecklist(chkDiv, mod.checklist, storeKey);
+    const resetWrap = document.querySelector('#mod2-reset-wrap');
+    if(resetWrap) renderModResetBtn(resetWrap, mod.checklist, storeKey);
+  }
+}
+
+function resetPbChecklist() {
+  pbChecklistState = {};
+  localStorage.setItem('edl_pb_chk', JSON.stringify(pbChecklistState));
+  const fiche = FICHES.find(f => f.id === 'pense-bete');
+  if(fiche) {
+    const pbDiv = document.querySelector('#pb-checklist');
+    if(pbDiv) renderChecklist(pbDiv, fiche.checklist, 'pb');
+    const resetWrap = document.querySelector('#pb-reset-wrap');
+    if(resetWrap) renderResetBtn(resetWrap, fiche.checklist);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// QUIZ — Module quiz
+// ══════════════════════════════════════════════════════════════════
+function answerModuleQuiz(modId, qi, selected, correct) {
+  const block = document.getElementById(`mq-${modId}-${qi}`);
+  if(!block) return;
+  const opts = block.querySelectorAll('.q-opt');
+  opts.forEach((o, i) => {
+    o.classList.add('disabled');
+    if(i === correct) o.classList.add('correct');
+    else if(i === selected && selected !== correct) o.classList.add('wrong');
+  });
+  const fb = document.getElementById(`mq-fb-${modId}-${qi}`);
+  if(fb) fb.classList.add('show');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// QUIZ — Main quiz
+// ══════════════════════════════════════════════════════════════════
+function answerQuiz(qi, selected, correct) {
+  if(quizAnswers[qi] !== undefined) return;
+  quizAnswers[qi] = selected;
+  const block = document.getElementById('q-' + qi);
+  if(!block) return;
+  const opts = block.querySelectorAll('.q-opt');
+  opts.forEach((o, i) => {
+    o.classList.add('disabled');
+    if(i === correct) o.classList.add('correct');
+    else if(i === selected && selected !== correct) o.classList.add('wrong');
+  });
+  const fb = document.getElementById('qfb-' + qi);
+  if(fb) fb.classList.add('show');
+
+  updateQuizProgress();
+
+  if(Object.keys(quizAnswers).length === QUIZ_QUESTIONS.length) {
+    showQuizResult();
+  }
+}
+
+function showQuizResult() {
+  const score = QUIZ_QUESTIONS.filter((q, i) => quizAnswers[i] === q.correct).length;
+  const pct = Math.round(score / QUIZ_QUESTIONS.length * 100);
+  savedScore = score + '/' + QUIZ_QUESTIONS.length;
+  localStorage.setItem('edl_quiz_score', savedScore);
+
+  // Update subtitle
+  document.getElementById('quiz-subtitle').textContent = `Score : ${score}/${QUIZ_QUESTIONS.length} · ${pct}%`;
+
+  // Append result card
+  const scroll = document.getElementById('quiz-scroll');
+  const resultDiv = document.createElement('div');
+  resultDiv.className = 'card';
+  resultDiv.style.textAlign = 'center';
+  resultDiv.style.padding = '24px 16px';
+  resultDiv.innerHTML = `
+    <div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:52px;color:var(--navy);line-height:1">${score}/${QUIZ_QUESTIONS.length}</div>
+    <div style="font-size:13px;color:var(--muted);margin-top:6px;margin-bottom:14px">${pct}% de bonnes réponses</div>
+    <div class="result-bar"><div class="result-fill" style="width:${pct}%;background:${pct >= 80 ? 'var(--green)' : pct >= 60 ? 'var(--amber)' : 'var(--red)'}"></div></div>
+    <div style="font-size:16px;font-weight:700;color:var(--navy)">${pct >= 80 ? '🎉 Excellent !' : pct >= 60 ? '👍 Bien, quelques révisions' : '📚 Revoyez les fiches'}</div>
+    <button class="btn-primary" onclick="resetQuiz()" style="margin-top:16px">🔄 Recommencer le quiz</button>
+    <button class="btn-secondary" onclick="switchTab('fiches')">📖 Revoir les fiches</button>
+  `;
+  scroll.appendChild(resultDiv);
+  scroll.scrollTop = scroll.scrollHeight;
+
+  // Update home stats
+  document.getElementById('done-count').textContent = Object.keys(moduleProgress).length;
+  document.getElementById('quiz-score').textContent = savedScore || '—';
+}
+
+function resetQuiz() {
+  quizAnswers = {};
+  renderQuiz();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ACCORDION
+// ══════════════════════════════════════════════════════════════════
+function toggleAccord(el) {
+  el.classList.toggle('open');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// RENDER FUNCTIONS
+// ══════════════════════════════════════════════════════════════════
+function renderHome() {
+  const doneCount = Object.keys(moduleProgress).length;
+  document.getElementById('done-count').textContent = doneCount;
+  document.getElementById('quiz-score').textContent = savedScore || '—';
+
+  const scroll = document.getElementById('home-scroll');
+  scroll.innerHTML = `
+    <div class="section-title">Guides pratiques</div>
+    ${MODULES.map(m => {
+      const done = !!moduleProgress[m.id];
+      return `<div class="module-card" onclick="openModule(${m.id})">
+        <div class="module-icon" style="background:${m.color}">${m.emoji}</div>
+        <div class="module-info">
+          <div class="module-title">${m.title}</div>
+          <div class="module-sub">${m.sub}</div>
+          <span class="module-badge ${done ? 'badge-done' : 'badge-new'}">${done ? '✓ Vu' : 'À voir'}</span>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+      </div>`;
+    }).join('')}
+  `;
+}
+
+function toggleFav(id, event) {
+  event.stopPropagation();
+  if(ficheFavs[id]) delete ficheFavs[id];
+  else ficheFavs[id] = true;
+  localStorage.setItem('edl_fiche_favs', JSON.stringify(ficheFavs));
+  renderFiches();
+}
+
+function updateFichesProgress() {
+  const seen = Object.keys(fichesSeen).length;
+  const el = document.getElementById('fiches-seen-count');
+  if(el) el.textContent = seen;
+  const total = document.getElementById('fiches-total-count');
+  if(total) total.textContent = FICHES.length;
+  const sub = document.getElementById('fiches-subtitle');
+  if(sub) sub.textContent = FICHES.length + ' fiches · ' + seen + ' consultée' + (seen > 1 ? 's' : '');
+}
+
+function ficheCardHtml(f) {
+  return '<div class="fiche-card ' + (fichesSeen[f.id] ? 'seen' : '') + '" onclick="openFiche(\'' + f.id + '\')">' +
+    '<button class="fav-btn ' + (ficheFavs[f.id] ? 'active' : '') + '" onclick="toggleFav(\'' + f.id + '\',event)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>' +
+    (fichesSeen[f.id] ? '<div class="seen-badge">✓</div>' : '') +
+    '<div class="fiche-emoji" style="margin-top:6px">' + f.emoji + '</div>' +
+    '<div class="fiche-name">' + f.name + '</div>' +
+    '<div class="fiche-desc">' + f.desc + '</div>' +
+    '</div>';
+}
+
+function renderFiches(activeFilter) {
+  updateFichesProgress();
+  activeFilter = activeFilter || 'all';
+  const scroll = document.getElementById('fiches-scroll');
+  const filtered = activeFilter === 'all' ? FICHES : FICHES.filter(f => f.cat === activeFilter);
+  const catLabels = {all:'Tout',terrain:'Terrain',legal:'Légal',pratique:'Pratique'};
+  const favFiches = FICHES.filter(f => ficheFavs[f.id]);
+  let favHtml = '';
+  if(favFiches.length > 0) {
+    favHtml = '<div style="font-size:11px;font-weight:700;color:#F59E0B;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">★ Favoris</div><div class="fiche-grid">' + favFiches.map(f => ficheCardHtml(f)).join('') + '</div><div style="height:1px;background:var(--border);margin:8px 0 14px"></div>';
+  }
+  scroll.innerHTML = '<div style="padding:12px 0 0">' +
+    '<div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none">' +
+    ['all','terrain','legal','pratique'].map(function(c) {
+      return '<button onclick="renderFiches(\'' + c + '\')" style="flex-shrink:0;padding:6px 14px;border-radius:20px;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;background:' + (activeFilter===c ? 'var(--navy)' : 'var(--card)') + ';color:' + (activeFilter===c ? 'white' : 'var(--text)') + ';transition:all .15s">' + catLabels[c] + '</button>';
+    }).join('') +
+    '</div>' +
+    favHtml +
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:10px">' + filtered.length + ' fiche' + (filtered.length > 1 ? 's' : '') + '</div>' +
+    '<div class="fiche-grid">' + filtered.map(function(f) { return ficheCardHtml(f); }).join('') + '</div>' +
+    '</div>';
+}
+
+function renderErreurs() {
+  const scroll = document.getElementById('erreurs-scroll');
+  scroll.innerHTML = `
+    <div style="padding:16px 0 0">
+      <div style="font-size:12px;font-weight:700;color:#E53E3E;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;padding:0 2px">Erreurs terrain fréquentes</div>
+      <div class="info-red" style="margin-bottom:10px">Ces erreurs peuvent entraîner réclamation client, facturation ou suspension de mission.</div>
+      ${ERREURS_CONTENT.map((e, i) => `
+        <div class="accord" id="acc-${i}">
+          <div class="accord-head" onclick="toggleAccord(this.parentElement)">
+            <div class="accord-title">${e.title}</div>
+            <div class="accord-arrow">▼</div>
+          </div>
+          <div class="accord-body">${e.body}</div>
+        </div>
+      `).join('')}
+      <div class="card" style="margin:12px 0;background:var(--navy)">
+        <div style="font-size:13px;font-weight:700;color:#E53E3E;margin-bottom:8px">Conséquences d'un manquement</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${['Réclamation client','Facturation','Reprise de mission','Suspension temporaire'].map(c=>`<span style="background:rgba(239,68,68,.2);color:#E53E3E;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600">${c}</span>`).join('')}
+        </div>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--navy);text-transform:uppercase;letter-spacing:.08em;margin:18px 0 10px;padding:0 2px">Références légales essentielles</div>
+      ${REGLES_CONTENT.map((e, i) => `
+        <div class="accord" id="regle-${i}">
+          <div class="accord-head" onclick="toggleAccord(this.parentElement)">
+            <div class="accord-title">${e.title}</div>
+            <div class="accord-arrow">▼</div>
+          </div>
+          <div class="accord-body">${e.body}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderQuiz() {
+  quizAnswers = {};
+  const scroll = document.getElementById('quiz-scroll');
+  scroll.innerHTML = `
+    <div style="padding:16px 0 0">
+      <div class="quiz-progress-wrap">
+        <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quiz-prog-fill" style="width:0%"></div></div>
+        <div class="quiz-progress-label" id="quiz-prog-label">0 / ${QUIZ_QUESTIONS.length} répondu</div>
+      </div>
+      <div class="info-blue" style="margin-bottom:14px">Répondez à toutes les questions pour voir votre score. Réponses expliquées après chaque question.</div>
+      ${QUIZ_QUESTIONS.map((q, qi) => `
+        <div class="q-block" id="q-${qi}">
+          <div class="q-num">Question ${qi+1} / ${QUIZ_QUESTIONS.length}</div>
+          <div class="q-text">${q.q}</div>
+          ${q.opts.map((o, oi) => `<div class="q-opt" onclick="answerQuiz(${qi},${oi},${q.correct})">${o}</div>`).join('')}
+          <div class="q-feedback" id="qfb-${qi}">💡 ${q.exp}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  document.getElementById('quiz-subtitle').textContent = `${QUIZ_QUESTIONS.length} questions · Testez vos connaissances`;
+}
+
+function updateQuizProgress() {
+  const answered = Object.keys(quizAnswers).length;
+  const total = QUIZ_QUESTIONS.length;
+  const pct = Math.round(answered / total * 100);
+  const fill = document.getElementById('quiz-prog-fill');
+  const label = document.getElementById('quiz-prog-label');
+  if(fill) fill.style.width = pct + '%';
+  if(label) label.textContent = answered + ' / ' + total + ' répondu' + (answered > 1 ? 'es' : '');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SEARCH
+// ══════════════════════════════════════════════════════════════════
+function filterFiches(query) {
+  const q = query.toLowerCase().trim();
+  const clearBtn = document.getElementById('search-clear');
+  if(clearBtn) clearBtn.style.display = q ? 'block' : 'none';
+
+  const scroll = document.getElementById('fiches-scroll');
+  if(!q) { renderFiches(); return; }
+
+  const words = q.split(' ').filter(w => w.length > 0);
+
+  // Search fiches
+  const ficheResults = FICHES.filter(f => {
+    const text = (f.name + ' ' + f.desc + ' ' + f.content.replace(/<[^>]+>/g, ' ')).toLowerCase();
+    return words.every(word => text.includes(word));
+  });
+
+  // Search guides (modules)
+  const guideResults = MODULES.filter(m => {
+    const text = (m.title + ' ' + m.sub + ' ' + m.desc + ' ' + m.content.replace(/<[^>]+>/g, ' ')).toLowerCase();
+    return words.every(word => text.includes(word));
+  });
+
+  // Search erreurs + règles
+  const erreurResults = ERREURS_CONTENT.filter((e, i) => {
+    const text = (e.title + ' ' + e.body.replace(/<[^>]+>/g, ' ')).toLowerCase();
+    return words.every(word => text.includes(word));
+  }).map((e, i) => ({...e, _idx: i, _type: 'erreur'}));
+
+  const regleResults = REGLES_CONTENT.filter((e, i) => {
+    const text = (e.title + ' ' + e.body.replace(/<[^>]+>/g, ' ')).toLowerCase();
+    return words.every(word => text.includes(word));
+  }).map((e, i) => ({...e, _idx: i, _type: 'regle'}));
+
+  const totalResults = ficheResults.length + guideResults.length + erreurResults.length + regleResults.length;
+
+  if(totalResults === 0) {
+    scroll.innerHTML = '<div class="search-empty"><div style="font-size:32px;margin-bottom:8px">🔍</div><div style="font-weight:700;color:var(--navy);margin-bottom:4px">Aucun résultat</div><div>Essayez "joints", "compteur", "signature"…</div></div>';
+    return;
+  }
+
+  let html = '<div style="padding:16px 0 0">';
+  html += '<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px">' + totalResults + ' résultat' + (totalResults > 1 ? 's' : '') + '</div>';
+
+  if(guideResults.length > 0) {
+    html += '<div style="font-size:11px;font-weight:700;color:var(--flatsy-dark);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Guides</div>';
+    html += guideResults.map(m => '<div class="module-card" onclick="openModule(' + m.id + ')"><div class="module-icon" style="background:' + m.color + '">' + m.emoji + '</div><div class="module-info"><div class="module-title">' + m.title + '</div><div class="module-sub">' + m.sub + '</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></div>').join('');
+  }
+
+  if(ficheResults.length > 0) {
+    html += '<div style="font-size:11px;font-weight:700;color:var(--flatsy-dark);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 8px">Fiches</div>';
+    html += '<div class="fiche-grid">' + ficheResults.map(f => ficheCardHtml(f)).join('') + '</div>';
+  }
+
+  if(erreurResults.length > 0 || regleResults.length > 0) {
+    html += '<div style="font-size:11px;font-weight:700;color:var(--flatsy-dark);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 8px">Règles</div>';
+    var allRules = erreurResults.concat(regleResults);
+    html += allRules.map(function(e) {
+      return '<div class="accord"><div class="accord-head" onclick="toggleAccord(this.parentElement)"><div class="accord-title">' + e.title + '</div><div class="accord-arrow">▼</div></div><div class="accord-body">' + e.body + '</div></div>';
+    }).join('');
+  }
+
+  html += '</div>';
+  scroll.innerHTML = html;
+}
+
+function clearSearch() {
+  const input = document.getElementById('fiches-search');
+  if(input) { input.value = ''; input.focus(); }
+  filterFiches('');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  // Update dark mode icon if loaded in dark mode
+  if(darkMode) {
+    const icon = document.getElementById('dark-icon');
+    if(icon) icon.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  }
+  renderHome();
+  renderFiches();
+  renderErreurs();
+  renderQuiz();
+
+  // Register Service Worker for offline support
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      console.log('SW registered');
+    }).catch(err => {
+      console.log('SW registration failed:', err);
+    });
+  }
+});
+</script>
+</body>
+</html>
